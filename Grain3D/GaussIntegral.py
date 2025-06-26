@@ -163,7 +163,7 @@ if __name__ == '__main__':
     start_time=time.time()
     dev=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    mesh=meshio.read("DEFEM3D/Beam3D/beam_mesh.msh", file_format="gmsh")
+    mesh=meshio.read("./Beam3D/mesh/beam_mesh_548.msh", file_format="gmsh")
 
     # 提取四面体单元顶点坐标数组：m*4*3（m为四面体单元个数，4为四面体的四个顶点，3为三维空间坐标）
     AllPoint_idx=mesh.cells_dict['tetra']

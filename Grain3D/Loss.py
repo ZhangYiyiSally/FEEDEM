@@ -25,8 +25,9 @@ class Loss:
         integral=GaussIntegral()
         integral_strainenergy=integral.Integral3D(self.StrainEnergy, cfg.n_int3D, Tetra_coord)
         integral_externalwork=integral.Integral2D(self.ExternalWork, cfg.n_int2D, Pre_Triangle_coord)
-        # integral_boundaryloss=integral.Integral2D(self.BoundaryLoss, 3, Dir_Triangle_coord)
-        integral_boundaryloss=self.BoundaryLoss(Dir_Triangle_coord, Sym_Triangle_coord)
+        integral_dirloss=integral.Integral2D(self.Dir_BoundaryLoss, cfg.n_int2D, Dir_Triangle_coord)
+        integral_symloss=integral.Integral2D(self.Sym_BoundaryLoss, cfg.n_int2D, Sym_Triangle_coord)
+        integral_boundaryloss=integral_dirloss+integral_symloss
 
         energy_loss = integral_strainenergy - integral_externalwork
         loss = energy_loss + cfg.loss_weight*integral_boundaryloss
@@ -91,19 +92,18 @@ class Loss:
         external_work = torch.sum( -u_pred * p, dim=-1)
         return external_work
     
-    def BoundaryLoss(self, dirichlet_field: torch.Tensor, symmetry_field: torch.Tensor) -> torch.Tensor:
-        #"""计算边界条件损失函数"""
-        # 1.计算dirichlet边界条件的损失函数
+    def Dir_BoundaryLoss(self, dirichlet_field: torch.Tensor) -> torch.Tensor:
         u_dir_pred = self.GetU(dirichlet_field)
 
         u_dir_value=torch.tensor(cfg.Dir_u, dtype=torch.float32).to(self.dev)
         u_dir_true = torch.zeros_like(u_dir_pred)
         u_dir_true[:, :, :]=u_dir_value
 
-        mes_loss = nn.MSELoss(reduction='sum')
-        dir_loss = mes_loss(u_dir_pred, u_dir_true)
+        dir_loss = torch.sum((u_dir_pred - u_dir_true)**2, dim=2)
+
+        return dir_loss
         
-        # 2.计算对称边界条件的损失函数
+    def Sym_BoundaryLoss(self, symmetry_field: torch.Tensor) -> torch.Tensor:
         u_sym_pred = self.GetU(symmetry_field)
         ## 计算对称边界的法向量
         edge1 = symmetry_field[:, 1] - symmetry_field[:, 0]  # v0 -> v1
@@ -111,13 +111,12 @@ class Loss:
         normals = torch.cross(edge1, edge2, dim=1)
         normals_unity = normals / torch.norm(normals, dim=1, keepdim=True)
         normals_unity=normals_unity.unsqueeze(1).expand(-1, u_sym_pred.size(1), -1)
-        ## 计算对称边界的法向位移
-        u_sym_normal = torch.sum(u_sym_pred * normals_unity, dim=-1)
-        u_sym_true = torch.zeros_like(u_sym_normal)
-        sym_loss = mes_loss(u_sym_normal, u_sym_true)
+        ## 计算对称边界的法向位移大小
+        u_sym_normal=torch.sum(u_sym_pred * normals_unity, dim=-1)
+        ## 与法向0位移的误差平方
+        sym_loss=u_sym_normal**2
 
-        boundary_loss = dir_loss + sym_loss
-        return boundary_loss
+        return sym_loss
 
 if __name__ =='__main__':
     start_time=time.time()
