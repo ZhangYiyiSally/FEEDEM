@@ -29,7 +29,7 @@ def evaluate_model(model, xyz, scaling):
     lam = E * nu / ((1 + nu) * (1 - 2 * nu))   # 超弹性λ参数
 
     # 1. 通过神经网络预测位移u (形状: N, 3)
-    u_pred= model(xyz_tensor)/scaling
+    u_pred= model(xyz_tensor)
 
     # 2. 计算位移梯度 ∇u (形状: N, 3, 3)
     duxdxyz = grad(u_pred[:, 0].unsqueeze(1), xyz_tensor, torch.ones(xyz_tensor.size()[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
@@ -74,7 +74,7 @@ def evaluate_model(model, xyz, scaling):
 
     # 直接提取张量分量, 并转换为numpy格式便于写入vtu文件（保持索引一致性）
     # 预测的位移分量, tuple形式便于在vtu中计算合位移
-    u = u_pred.detach().cpu().numpy()
+    u = u_pred.detach().cpu().numpy()/scaling
     U = (np.float64(u[:,0]), np.float64(u[:,1]), np.float64(u[:,2]))
     # Green-Lagrange应变张量分量
     E11 = E[:, 0, 0].detach().cpu().numpy()
@@ -108,7 +108,7 @@ def evaluate_model(model, xyz, scaling):
 
 # 从文件加载已经训练完成的模型
 # model=MultiLayerNet(D_in=3, H=30, D_out=3).cuda()
-dem_epoch=100000
+dem_epoch=35000
 model=ResNet(input_size=cfg.input_size, hidden_size=cfg.hidden_size, output_size=cfg.output_size, depth=cfg.depth).cuda()
 model.load_state_dict(torch.load(f"{cfg.model_save_path}/dem_epoch{dem_epoch}.pth"))
 model.eval()  # 设置模型为evaluation状态
