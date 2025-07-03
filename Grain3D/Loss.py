@@ -12,9 +12,10 @@ from GaussIntegral import GaussIntegral
 
 
 class Loss:
-    def __init__(self, model):
+    def __init__(self, model, scaling):
         self.dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model = model
+        self.scaling=scaling
         pass
         
     def loss_function(self, Tetra_coord: torch.Tensor, Dir_Triangle_coord: torch.Tensor, Pre_Triangle_coord: torch.Tensor, Sym_Triangle_coord: torch.Tensor) -> torch.Tensor:
@@ -37,7 +38,7 @@ class Loss:
         return loss, energy_loss, cfg.loss_weight*integral_boundaryloss
 
     def GetU(self, xyz_field: torch.Tensor) -> torch.Tensor:
-        u = self.model(xyz_field)
+        u = self.model(xyz_field)/self.scaling
         return u
     
     def StrainEnergy(self, xyz_field: torch.Tensor) -> torch.Tensor:

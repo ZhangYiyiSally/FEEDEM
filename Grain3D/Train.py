@@ -75,7 +75,7 @@ if __name__ == '__main__':
     for epoch in range(start_epoch, epoch_num):
         
         # # 计算损失函数
-        loss=Loss(dem)
+        loss=Loss(dem, cfg.model_scale)
         loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym)
         # 反向传播
         optimizer.zero_grad()
