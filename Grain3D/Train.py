@@ -36,7 +36,7 @@ dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 if __name__ == '__main__':
     torch.manual_seed(cfg.seed)
     mesh = meshio.read(cfg.mesh_path, file_format="gmsh")
-    data=Dataset()
+    data=Dataset(cfg.model_scale)
     dom=data.domain(mesh)
     print("加载网络：%s" % cfg.mesh_path)
 

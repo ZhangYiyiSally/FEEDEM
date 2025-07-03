@@ -16,7 +16,8 @@ import Utility as util
 dev = torch.device(
     "cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-def evaluate_model(model, xyz):
+def evaluate_model(model, xyz, scaling):
+    xyz=xyz*scaling
     xyz_tensor = torch.from_numpy(xyz).float()
     xyz_tensor = xyz_tensor.to(dev)
     xyz_tensor.requires_grad_(True)
@@ -28,7 +29,7 @@ def evaluate_model(model, xyz):
     lam = E * nu / ((1 + nu) * (1 - 2 * nu))   # 超弹性λ参数
 
     # 1. 通过神经网络预测位移u (形状: N, 3)
-    u_pred= model(xyz_tensor)
+    u_pred= model(xyz_tensor)/scaling
 
     # 2. 计算位移梯度 ∇u (形状: N, 3, 3)
     duxdxyz = grad(u_pred[:, 0].unsqueeze(1), xyz_tensor, torch.ones(xyz_tensor.size()[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
@@ -107,7 +108,7 @@ def evaluate_model(model, xyz):
 
 # 从文件加载已经训练完成的模型
 # model=MultiLayerNet(D_in=3, H=30, D_out=3).cuda()
-dem_epoch=0
+dem_epoch=100000
 model=ResNet(input_size=cfg.input_size, hidden_size=cfg.hidden_size, output_size=cfg.output_size, depth=cfg.depth).cuda()
 model.load_state_dict(torch.load(f"{cfg.model_save_path}/dem_epoch{dem_epoch}.pth"))
 model.eval()  # 设置模型为evaluation状态
@@ -122,7 +123,7 @@ xyz=mesh.points
 U, SVonMises, \
 E11, E12, E13, E22, E23, E33, \
 S11, S12, S13, S22, S23, S33, \
-sigma11, sigma12, sigma13, sigma22, sigma23, sigma33= evaluate_model(model, xyz)
+sigma11, sigma12, sigma13, sigma22, sigma23, sigma33= evaluate_model(model, xyz, cfg.model_scale)
 
 # all_cells=mesh.cell_data['gmsh:physical'][6]
 # 写入vtu网格文件
