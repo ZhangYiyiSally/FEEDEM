@@ -37,5 +37,5 @@ loss_weight=1e5 # 边界损失函数的权重
 
 #---------------------------文件路径-----------------------------------------------
 mesh_path=f"Grain3D/mesh/{model_shape}_mesh_{mesh_points}.msh"
-model_save_path=f"Grain3D/Results_Adam/{model_shape}_mesh{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/int{n_int3D}"
-Evaluate_save_path=f"Grain3D/Results_Adam/{model_shape}_mesh{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/int{n_int3D}/{model_shape}_NeoHook"
+model_save_path=f"Grain3D/Results_Adam/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/int{n_int3D}"
+Evaluate_save_path=f"Grain3D/Results_Adam/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/int{n_int3D}/{model_shape}_NeoHook"
