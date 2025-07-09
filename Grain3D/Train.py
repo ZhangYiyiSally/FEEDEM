@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # 定义学习率调度器
     lr_history = []
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2000, gamma=0.9)  # 每1000个epoch将学习率降低为原来的0.1倍
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99995)  # 指数衰减：每个epoch衰减为当前lr * gamma
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9999)  # 指数衰减：每个epoch衰减为当前lr * gamma
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50,  eta_min=1e-6 )  # 余弦退火：T_max为半周期（epoch数），eta_min为最小学习率
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,mode='min', factor=0.1, patience=10, threshold=1e-4)  # 按指标衰减：当loss在patience个epoch内下降小于阈值threshold时，将学习率降低为原来的factor倍
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     for epoch in range(start_epoch, epoch_num):
         
         # # 计算损失函数
-        loss=Loss(dem, cfg.model_scale)
+        loss=Loss(dem)
         loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym)
         # 反向传播
         optimizer.zero_grad()

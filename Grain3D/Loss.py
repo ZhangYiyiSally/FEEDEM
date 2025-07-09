@@ -12,10 +12,9 @@ from GaussIntegral import GaussIntegral
 
 
 class Loss:
-    def __init__(self, model, scaling):
+    def __init__(self, model):
         self.dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model = model
-        self.scaling=scaling
         pass
         
     def loss_function(self, Tetra_coord: torch.Tensor, Dir_Triangle_coord: torch.Tensor, Pre_Triangle_coord: torch.Tensor, Sym_Triangle_coord: torch.Tensor) -> torch.Tensor:
@@ -38,7 +37,7 @@ class Loss:
         return loss, energy_loss, cfg.loss_weight*integral_boundaryloss
 
     def GetU(self, xyz_field: torch.Tensor) -> torch.Tensor:
-        u = self.model(xyz_field)/self.scaling
+        u = self.model(xyz_field)
         return u
     
     def StrainEnergy(self, xyz_field: torch.Tensor) -> torch.Tensor:
@@ -53,19 +52,36 @@ class Loss:
         duxdxyz = grad(pred_u[:, :, 0], xyz_field, torch.ones_like(pred_u[:, :, 0]), create_graph=True, retain_graph=True)[0]
         duydxyz = grad(pred_u[:, :, 1], xyz_field, torch.ones_like(pred_u[:, :, 1]), create_graph=True, retain_graph=True)[0]
         duzdxyz = grad(pred_u[:, :, 2], xyz_field, torch.ones_like(pred_u[:, :, 2]), create_graph=True, retain_graph=True)[0]
-        Fxx = duxdxyz[:, :, 0].unsqueeze(2) + 1
-        Fxy = duxdxyz[:, :, 1].unsqueeze(2) + 0
-        Fxz = duxdxyz[:, :, 2].unsqueeze(2) + 0
-        Fyx = duydxyz[:, :, 0].unsqueeze(2) + 0
-        Fyy = duydxyz[:, :, 1].unsqueeze(2) + 1
-        Fyz = duydxyz[:, :, 2].unsqueeze(2) + 0
-        Fzx = duzdxyz[:, :, 0].unsqueeze(2) + 0
-        Fzy = duzdxyz[:, :, 1].unsqueeze(2) + 0
-        Fzz = duzdxyz[:, :, 2].unsqueeze(2) + 1
-        detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
-        trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
+        # Fxx = duxdxyz[:, :, 0].unsqueeze(2) + 1
+        # Fxy = duxdxyz[:, :, 1].unsqueeze(2) + 0
+        # Fxz = duxdxyz[:, :, 2].unsqueeze(2) + 0
+        # Fyx = duydxyz[:, :, 0].unsqueeze(2) + 0
+        # Fyy = duydxyz[:, :, 1].unsqueeze(2) + 1
+        # Fyz = duydxyz[:, :, 2].unsqueeze(2) + 0
+        # Fzx = duzdxyz[:, :, 0].unsqueeze(2) + 0
+        # Fzy = duzdxyz[:, :, 1].unsqueeze(2) + 0
+        # Fzz = duzdxyz[:, :, 2].unsqueeze(2) + 1
+        # detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
+        # trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
 
-        strainenergy_tmp = 0.5 * lam * (torch.log(detF) * torch.log(detF)) - mu * torch.log(detF) + 0.5 * mu * (trC - 3)
+        # EPS=1e-6
+        # strainenergy_tmp = 0.5 * lam * (torch.log(detF+EPS) * torch.log(detF+EPS)) - mu * torch.log(detF+EPS) + 0.5 * mu * (trC - 3)
+        # strainenergy = strainenergy_tmp[:, :, 0]
+
+        grad_u = torch.stack([duxdxyz, duydxyz, duzdxyz], dim=-2)  # [N,4,3,3]
+    
+        # 计算变形梯度张量 F = I + ∇u
+        I = torch.eye(3, device=self.dev)  # [3,3]
+        F = I + grad_u  # [N,3,3]
+
+        # 计算变形梯度的行列式 J = det(F), 并断言其大于0
+        J = torch.det(F).unsqueeze(-1) # 变形梯度行列式
+        assert torch.all(J > 1e-6), f"负体积单元: {torch.sum(J <= 0).item()}个" # 断言变形梯度行列式大于0
+
+        I1=torch.sum(F**2, dim=[-2, -1]).unsqueeze(-1)
+
+        EPS=1e-6
+        strainenergy_tmp = 0.5 * lam * (torch.log(J+EPS) * torch.log(J+EPS)) - mu * torch.log(J+EPS) + 0.5 * mu * (I1 - 3)
         strainenergy = strainenergy_tmp[:, :, 0]
     
         return strainenergy
