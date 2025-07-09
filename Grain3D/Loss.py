@@ -74,14 +74,14 @@ class Loss:
         I = torch.eye(3, device=self.dev)  # [3,3]
         F = I + grad_u  # [N,3,3]
 
-        # 计算变形梯度的行列式 J = det(F), 并断言其大于0
+        # 计算变形梯度的行列式 J = det(F)
         J = torch.det(F).unsqueeze(-1) # 变形梯度行列式
-        assert torch.all(J > 1e-6), f"负体积单元: {torch.sum(J <= 0).item()}个" # 断言变形梯度行列式大于0
+        J_safe=nn.functional.softplus(J) # 防止负体积单元
 
         I1=torch.sum(F**2, dim=[-2, -1]).unsqueeze(-1)
 
-        EPS=1e-6
-        strainenergy_tmp = 0.5 * lam * (torch.log(J+EPS) * torch.log(J+EPS)) - mu * torch.log(J+EPS) + 0.5 * mu * (I1 - 3)
+        EPS=1e-8
+        strainenergy_tmp = 0.5 * lam * (torch.log(J_safe + EPS) * torch.log(J_safe + EPS)) - mu * torch.log(J_safe + EPS) + 0.5 * mu * (I1 - 3)
         strainenergy = strainenergy_tmp[:, :, 0]
     
         return strainenergy
