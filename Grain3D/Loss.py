@@ -17,11 +17,12 @@ class Loss:
         self.model = model
         pass
         
-    def loss_function(self, Tetra_coord: torch.Tensor, Dir_Triangle_coord: torch.Tensor, Pre_Triangle_coord: torch.Tensor, Sym_Triangle_coord: torch.Tensor) -> torch.Tensor:
+    def loss_function(self, Tetra_coord: torch.Tensor, Dir_Triangle_coord: torch.Tensor, Pre_Triangle_coord: torch.Tensor, Sym_Triangle_coord: torch.Tensor, Pre_load: float) -> torch.Tensor:
         self.Tetra_coord=Tetra_coord
         self.Dir_Triangle_coord=Dir_Triangle_coord
         self.Pre_Triangle_coord=Pre_Triangle_coord
         self.Sym_Triangle_coord=Sym_Triangle_coord
+        self.Pre_load=Pre_load
         integral=GaussIntegral()
         integral_strainenergy=integral.Integral3D(self.StrainEnergy, cfg.n_int3D, Tetra_coord)
         integral_externalwork=integral.Integral2D(self.ExternalWork, cfg.n_int2D, Pre_Triangle_coord)
@@ -103,7 +104,7 @@ class Loss:
         #"""计算外力做功"""
         u_pred = self.GetU(pressure_field)
         #计算每个单元的高斯积分点的压力向量
-        p= cfg.Pre_value*normals_unity.unsqueeze(1).expand(-1, u_pred.size(1), -1)
+        p= self.Pre_load*normals_unity.unsqueeze(1).expand(-1, u_pred.size(1), -1)
 
         external_work = torch.sum( -u_pred * p, dim=-1)
         return external_work

@@ -30,6 +30,21 @@ def plot_loss(loss, error):
         spine.set_linewidth(2)  # 设置边框宽度为2
     plt.pause(0.0001)
 
+def get_Pre_load(step:int, Pre_value:list, step_interval:int):
+    initial_load = Pre_value[0] # 初始载荷
+    max_load = Pre_value[1] # 最大载荷
+    step_load = Pre_value[2] # 载荷步长
+
+     # 计算应该增加多少次载荷
+    load_increases = step // step_interval
+    
+    # 计算当前载荷
+    current_load = initial_load + load_increases*step_load
+    
+    # 限制最大载荷
+    pre_load = min(current_load, max_load)
+    
+    return pre_load
 
 dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -76,7 +91,8 @@ if __name__ == '__main__':
         
         # # 计算损失函数
         loss=Loss(dem)
-        loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym)
+        Pre_load=get_Pre_load(epoch, cfg.Pre_value, cfg.Pre_step_interval)
+        loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym, Pre_load)
         # 反向传播
         optimizer.zero_grad()
         loss_value.backward()
