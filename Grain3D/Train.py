@@ -57,55 +57,56 @@ if __name__ == '__main__':
     # eH1=[]
     epoch_num=cfg.epoch_num
     learning_rate=cfg.lr
+    max_iter_LBFGS=cfg.max_iter_LBFGS
         
     # 定义优化器
-    # optimizer = torch.optim.LBFGS(dem.parameters(), lr=learning_rate_LBFGS, max_iter=max_iter_LBFGS)
-    optimizer = torch.optim.Adam(dem.parameters(), lr=learning_rate)
+    optimizer = torch.optim.LBFGS(dem.parameters(), lr=learning_rate, max_iter=max_iter_LBFGS)
+    # optimizer = torch.optim.Adam(dem.parameters(), lr=learning_rate)
     # optimizer = torch.optim.SGD(dem.parameters(), lr=learning_rate_SGD)
 
     # 定义学习率调度器
     lr_history = []
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2000, gamma=0.9)  # 每1000个epoch将学习率降低为原来的0.1倍
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9999)  # 指数衰减：每个epoch衰减为当前lr * gamma
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.999)  # 指数衰减：每个epoch衰减为当前lr * gamma
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50,  eta_min=1e-6 )  # 余弦退火：T_max为半周期（epoch数），eta_min为最小学习率
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,mode='min', factor=0.1, patience=10, threshold=1e-4)  # 按指标衰减：当loss在patience个epoch内下降小于阈值threshold时，将学习率降低为原来的factor倍
 
     print(f"train: model_scale={cfg.model_scale}, Net={cfg.depth}x{cfg.input_size}-{cfg.hidden_size}-{cfg.output_size}, lr={learning_rate:.0e}, scheduler={cfg.lr_scheduler}{scheduler.gamma}, loss_weight={cfg.loss_weight:.0e}")
     tqdm_epoch = tqdm(range(start_epoch, epoch_num), desc='epoches',colour='red', dynamic_ncols=True)
     for epoch in range(start_epoch, epoch_num):
-        
-        # # 计算损失函数
+        # # # 计算损失函数
+        # loss=Loss(dem)
+        # loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym)
+        # # 反向传播
+        # optimizer.zero_grad()
+        # loss_value.backward()
+        # # 梯度范数）
+        # # torch.nn.utils.clip_grad_norm_(dem.parameters(), max_norm=10.0) # 梯度裁剪通过限制梯度的大小，防止反向传播过程中梯度值过大导致的训练不稳定
+        # optimizer.step()
+        # scheduler.step()  # 更新学习率
+
         loss=Loss(dem)
-        loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym)
-        # 反向传播
-        optimizer.zero_grad()
-        loss_value.backward()
-        # 梯度范数）
-        # torch.nn.utils.clip_grad_norm_(dem.parameters(), max_norm=10.0) # 梯度裁剪通过限制梯度的大小，防止反向传播过程中梯度值过大导致的训练不稳定
-        optimizer.step()
-        scheduler.step()  # 更新学习率
 
-        # def closure():
-        #     loss=Loss(dem)
-        #     loss_closure=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym)
-        #     # 反向传播
-        #     optimizer.zero_grad()
-        #     loss_closure.backward()
-        #     return loss_closure
+        def closure():
+            loss_closure, _, _=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym)
+            losses.append(loss_closure.item())
+            # eL2.append(util.errorL2(dem, mesh.points, dev).item())
+            # eH1.append(util.errorH1(dem, mesh.points, dev).item())
+            lr_history.append(optimizer.param_groups[0]['lr'])
+            # 反向传播
+            optimizer.zero_grad()
+            loss_closure.backward()
+            return loss_closure
             
-        # optimizer.step(closure=closure)
+        optimizer.step(closure=closure)
 
-        losses.append(loss_value.item())
-        # eL2.append(util.errorL2(dem, mesh.points, dev).item())
-        # eH1.append(util.errorH1(dem, mesh.points, dev).item())
-        lr_history.append(optimizer.param_groups[0]['lr'])
-
+        loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym)
 
         # 更新epoch进度条
         tqdm_epoch.update()
         tqdm_epoch.set_postfix({'loss':'{:.5f}'.format(losses[-1]),'eloss':'{:.5f}'.format(energy_loss), 'bloss':'{:.5f}'.format(boundary_loss), 'lr':'{:.5f}'.format(lr_history[-1])})
 
-        if epoch % 5000 == 0:
+        if epoch % 100 == 0:
             # 保存模型
             os.makedirs(cfg.model_save_path, exist_ok=True)
             torch.save(dem.state_dict(), f"{cfg.model_save_path}/dem_epoch{epoch}.pth")

@@ -30,12 +30,13 @@ hidden_size=200  # ResNet的隐藏层大小
 output_size=3  # ResNet的输出大小
 depth=4  # ResNet的深度
 #--------------------------------训练参数设置-----------------------------------------
-epoch_num=100000  # 训练的epoch数
-lr=5e-4 #  学习率
-lr_scheduler='Exp'
+epoch_num=500  # 训练的epoch数
+lr=5e-2 #  学习率
+max_iter_LBFGS=20
+lr_scheduler='999Exp'
 loss_weight=1e9 # 边界损失函数的权重
 
 #---------------------------文件路径-----------------------------------------------
 mesh_path=f"Grain3D/mesh/{model_shape}_mesh_{mesh_points}.msh"
-model_save_path=f"Grain3D/Results_Adam/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/int{n_int3D}"
-Evaluate_save_path=f"Grain3D/Results_Adam/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/int{n_int3D}/{model_shape}_NeoHook"
+model_save_path=f"Grain3D/Results_LBFGS/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/int{n_int3D}"
+Evaluate_save_path=f"Grain3D/Results_LBFGS/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/int{n_int3D}/{model_shape}_NeoHook"

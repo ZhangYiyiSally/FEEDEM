@@ -76,7 +76,8 @@ class Loss:
 
         # 计算变形梯度的行列式 J = det(F)
         J = torch.det(F).unsqueeze(-1) # 变形梯度行列式
-        J_safe=nn.functional.softplus(J) # 防止负体积单元
+        # J_safe=nn.functional.softplus(J) # 防止负体积单元
+        J_safe=J
 
         I1=torch.sum(F**2, dim=[-2, -1]).unsqueeze(-1)
 
