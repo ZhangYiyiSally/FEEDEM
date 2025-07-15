@@ -40,6 +40,14 @@ class Dataset:
         Sym_Triangle_coord=torch.tensor(Sym_Triangle_coord, dtype=torch.float32).to(self.dev)
         return Sym_Triangle_coord
     
+    def line_Singular(self, marker:str) -> torch.Tensor:
+        SingularCell_idx=self.mesh.cell_sets_dict[marker]['line']
+        SingularPoint_idx=self.mesh.cells_dict['line'][SingularCell_idx]
+        Singular_Line_coord = self.mesh.points[SingularPoint_idx]
+        Singular_Line_coord=Singular_Line_coord*self.model_scale # 缩放模型
+        Singular_Line_coord=torch.tensor(Singular_Line_coord, dtype=torch.float32).to(self.dev)
+        return Singular_Line_coord
+    
 if __name__ == '__main__':  # 测试边界条件是否设置正确
     mesh = meshio.read("DEFEM3D/Grain3D/mesh/0.msh", file_format="gmsh")
     data = Dataset()

@@ -17,11 +17,12 @@ class Loss:
         self.model = model
         pass
         
-    def loss_function(self, Tetra_coord: torch.Tensor, Dir_Triangle_coord: torch.Tensor, Pre_Triangle_coord: torch.Tensor, Sym_Triangle_coord: torch.Tensor) -> torch.Tensor:
+    def loss_function(self, Tetra_coord: torch.Tensor, Dir_Triangle_coord: torch.Tensor, Pre_Triangle_coord: torch.Tensor, Sym_Triangle_coord: torch.Tensor, Singular_Line_coord: torch.Tensor) -> torch.Tensor:
         self.Tetra_coord=Tetra_coord
         self.Dir_Triangle_coord=Dir_Triangle_coord
         self.Pre_Triangle_coord=Pre_Triangle_coord
         self.Sym_Triangle_coord=Sym_Triangle_coord
+        self.Singular_Line_coord=Singular_Line_coord
         integral=GaussIntegral()
         integral_strainenergy=integral.Integral3D(self.StrainEnergy, cfg.n_int3D, Tetra_coord)
         integral_externalwork=integral.Integral2D(self.ExternalWork, cfg.n_int2D, Pre_Triangle_coord)
@@ -49,40 +50,55 @@ class Loss:
         xyz_field.requires_grad = True  # 为了计算位移场的梯度，这里需要设置为True
         pred_u = self.GetU(xyz_field)
 
-        duxdxyz = grad(pred_u[:, :, 0], xyz_field, torch.ones_like(pred_u[:, :, 0]), create_graph=True, retain_graph=True)[0]
+        # 计算所有点到奇异边线上点的距离，并找到最小距离
+        Line_point=torch.cat([self.Singular_Line_coord[:, 0, :], self.Singular_Line_coord[-1:, -1, :]], dim=0)  #[num_point, 3]
+        distances = torch.cat([torch.norm(xyz_field - point, dim=-1, keepdim=True) for point in Line_point], dim=-1)  #[N, 4, num_point]
+        min_distances, _ = torch.min(distances, dim=-1, keepdim=True)  #[N, 4, 1]
+
+        # 1. 位移梯度正则化参数（可配置）
+        GRAD_CLIP_RADIUS = cfg.GRAD_CLIP_RADIUS    # 受影响的半径（特征长度的5-10%）
+        MAX_GRAD_NORM = cfg.MAX_GRAD_NORM        # 最大允许梯度范数
+
+        # 2. 计算梯度，并添加梯度范数约束
+        duxdxyz = grad(pred_u[:, :, 0], xyz_field, torch.ones_like(pred_u[:, :, 0]), create_graph=True, retain_graph=True)[0] # [N, 4, 3]
         duydxyz = grad(pred_u[:, :, 1], xyz_field, torch.ones_like(pred_u[:, :, 1]), create_graph=True, retain_graph=True)[0]
         duzdxyz = grad(pred_u[:, :, 2], xyz_field, torch.ones_like(pred_u[:, :, 2]), create_graph=True, retain_graph=True)[0]
-        # Fxx = duxdxyz[:, :, 0].unsqueeze(2) + 1
-        # Fxy = duxdxyz[:, :, 1].unsqueeze(2) + 0
-        # Fxz = duxdxyz[:, :, 2].unsqueeze(2) + 0
-        # Fyx = duydxyz[:, :, 0].unsqueeze(2) + 0
-        # Fyy = duydxyz[:, :, 1].unsqueeze(2) + 1
-        # Fyz = duydxyz[:, :, 2].unsqueeze(2) + 0
-        # Fzx = duzdxyz[:, :, 0].unsqueeze(2) + 0
-        # Fzy = duzdxyz[:, :, 1].unsqueeze(2) + 0
-        # Fzz = duzdxyz[:, :, 2].unsqueeze(2) + 1
-        # detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
-        # trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
-
-        # EPS=1e-6
-        # strainenergy_tmp = 0.5 * lam * (torch.log(detF+EPS) * torch.log(detF+EPS)) - mu * torch.log(detF+EPS) + 0.5 * mu * (trC - 3)
-        # strainenergy = strainenergy_tmp[:, :, 0]
-
         grad_u = torch.stack([duxdxyz, duydxyz, duzdxyz], dim=-2)  # [N,4,3,3]
-    
-        # 计算变形梯度张量 F = I + ∇u
+        grad_norm = torch.norm(grad_u, dim=-1)  # [N,4,3]
+        
+        # 梯度裁剪 (仅在反向传播时影响)
+        clipped_grad_norm = torch.where(
+        grad_norm > MAX_GRAD_NORM,
+        MAX_GRAD_NORM + (grad_norm - MAX_GRAD_NORM).detach(),
+        grad_norm
+        )
+        
+        # 创建权重掩码：距离越近权重越小
+        reg_mask = torch.exp(-min_distances / GRAD_CLIP_RADIUS)  # [N, 4, 1]
+        # 应用正则化：混合原始梯度和裁剪后梯度
+        regularized_grad_norm = (1 - reg_mask) * grad_norm + reg_mask * clipped_grad_norm  # [N, 4, 3]
+
+        # 重构梯度张量（保持计算图）
+        scale_factor = (regularized_grad_norm / (grad_norm + 1e-8)).unsqueeze(-2)  # [N, 4, 1, 3]
+        duxdxyz_scale=duxdxyz*scale_factor[..., 0] # [N, 4, 3]
+        duydxyz_scale=duydxyz*scale_factor[..., 1]
+        duzdxyz_scale=duzdxyz*scale_factor[..., 2]
+        grad_u_scale = torch.stack([duxdxyz_scale, duydxyz_scale, duzdxyz_scale], dim=-2)  # [N, 4, 3, 3]
+
+        # 3. 计算变形梯度张量 F = I + ∇u
         I = torch.eye(3, device=self.dev)  # [3,3]
-        F = I + grad_u  # [N,3,3]
+        F = I + grad_u_scale  # [N,4,3,3]
 
         # 计算变形梯度的行列式 J = det(F)
-        J = torch.det(F).unsqueeze(-1) # 变形梯度行列式
+        J = torch.det(F).unsqueeze(-1) # 变形梯度行列式[N,4,1]
         # J_safe=nn.functional.softplus(J) # 防止负体积单元
-
-        I1=torch.sum(F**2, dim=[-2, -1]).unsqueeze(-1)
-
+        I1=torch.sum(F**2, dim=[-2, -1]).unsqueeze(-1) # [N,4,1]
         EPS=1e-8
-        strainenergy_tmp = 0.5 * lam * (torch.log(J + EPS) * torch.log(J + EPS)) - mu * torch.log(J + EPS) + 0.5 * mu * (I1 - 3)
-        strainenergy = strainenergy_tmp[:, :, 0]
+
+        # 4. 在固定点附近降低应变能贡献
+        energy_weight = 1 - reg_mask # [N, 4, 1]
+        strainenergy_tmp = (0.5 * lam * (torch.log(J + EPS) * torch.log(J + EPS)) - mu * torch.log(J + EPS) + 0.5 * mu * (I1 - 3)) * energy_weight
+        strainenergy = strainenergy_tmp[:, :, 0] # [N, 4]
     
         return strainenergy
     

@@ -43,6 +43,7 @@ if __name__ == '__main__':
     bc_Dir=data.bc_Dirichlet(cfg.Dir_marker)
     bc_Pre=data.bc_Pressure(cfg.Pre_marker)
     bc_Sym=data.bc_Symmetry(cfg.Sym_marker)
+    lin_Singular=data.line_Singular(cfg.Singular_marker)
 
     # 定义神经网络，神经网络的输入为空间坐标，输出为三个方向的位移
     dem=ResNet(cfg.input_size, cfg.hidden_size, cfg.output_size, cfg.depth).to(dev)
@@ -76,7 +77,7 @@ if __name__ == '__main__':
         
         # # 计算损失函数
         loss=Loss(dem)
-        loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym)
+        loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym, lin_Singular)
         # 反向传播
         optimizer.zero_grad()
         loss_value.backward()
