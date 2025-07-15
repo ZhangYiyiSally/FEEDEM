@@ -77,12 +77,12 @@ class Loss:
 
         # 计算变形梯度的行列式 J = det(F)
         J = torch.det(F).unsqueeze(-1) # 变形梯度行列式
-        J_safe=nn.functional.softplus(J) # 防止负体积单元
+        # J_safe=nn.functional.softplus(J) # 防止负体积单元
 
         I1=torch.sum(F**2, dim=[-2, -1]).unsqueeze(-1)
 
         EPS=1e-8
-        strainenergy_tmp = 0.5 * lam * (torch.log(J_safe + EPS) * torch.log(J_safe + EPS)) - mu * torch.log(J_safe + EPS) + 0.5 * mu * (I1 - 3)
+        strainenergy_tmp = 0.5 * lam * (torch.log(J + EPS) * torch.log(J + EPS)) - mu * torch.log(J + EPS) + 0.5 * mu * (I1 - 3)
         strainenergy = strainenergy_tmp[:, :, 0]
     
         return strainenergy
