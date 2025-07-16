@@ -34,17 +34,25 @@ def get_Pre_load(step:int, Pre_value:list, step_interval:int):
     initial_load = Pre_value[0] # 初始载荷
     max_load = Pre_value[1] # 最大载荷
     step_load = Pre_value[2] # 载荷步长
-
      # 计算应该增加多少次载荷
     load_increases = step // step_interval
-    
     # 计算当前载荷
     current_load = initial_load + load_increases*step_load
-    
     # 限制最大载荷
     pre_load = min(current_load, max_load)
-    
     return pre_load
+
+def get_loss_weight(step:int, loss_weight:list, step_interval:int):
+    initial_weight = loss_weight[0] # 初始权重
+    max_weight = loss_weight[1] # 最大权重
+    step_weight = loss_weight[2] # 权重步长
+    # 计算应该增加多少次权重
+    weight_increases = step // step_interval
+    # 计算当前权重
+    current_weight = initial_weight + weight_increases*step_weight
+    # 限制最大权重
+    loss_weight = min(current_weight, max_weight)
+    return loss_weight
 
 dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -85,14 +93,15 @@ if __name__ == '__main__':
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50,  eta_min=1e-6 )  # 余弦退火：T_max为半周期（epoch数），eta_min为最小学习率
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,mode='min', factor=0.1, patience=10, threshold=1e-4)  # 按指标衰减：当loss在patience个epoch内下降小于阈值threshold时，将学习率降低为原来的factor倍
 
-    print(f"train: model_scale={cfg.model_scale}, Net={cfg.depth}x{cfg.input_size}-{cfg.hidden_size}-{cfg.output_size}, lr={learning_rate:.0e}, scheduler={cfg.lr_scheduler}{scheduler.gamma}, loss_weight={cfg.loss_weight:.0e}, piecewise={cfg.Pre_value[0]:.0e}-{cfg.Pre_value[2]:.0e}-{cfg.Pre_step_interval:.0e}")
+    print(f"train: model_scale={cfg.model_scale}, Net={cfg.depth}x{cfg.input_size}-{cfg.hidden_size}-{cfg.output_size}, lr={learning_rate:.0e}, scheduler={cfg.lr_scheduler}{scheduler.gamma}, piecewise={cfg.Pre_value[0]:.0e}-{cfg.Pre_value[2]:.0e}-{cfg.Pre_step_interval:.0e}")
     tqdm_epoch = tqdm(range(start_epoch, epoch_num), desc='epoches',colour='red', dynamic_ncols=True)
     for epoch in range(start_epoch, epoch_num):
         
         # # 计算损失函数
         loss=Loss(dem)
         Pre_load=get_Pre_load(epoch, cfg.Pre_value, cfg.Pre_step_interval)
-        loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym, Pre_load)
+        loss_weight=get_loss_weight(epoch, cfg.loss_weight, cfg.weight_step_interval)
+        loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym, Pre_load, loss_weight)
         # 反向传播
         optimizer.zero_grad()
         loss_value.backward()
@@ -119,7 +128,7 @@ if __name__ == '__main__':
 
         # 更新epoch进度条
         tqdm_epoch.update()
-        tqdm_epoch.set_postfix({'loss':'{:.5e}'.format(losses[-1]),'eloss':'{:.5e}'.format(energy_loss), 'bloss':'{:.5e}'.format(boundary_loss), 'lr':'{:.1e}'.format(lr_history[-1]), 'p':'{:.1e}'.format(Pre_load)})
+        tqdm_epoch.set_postfix({'loss':'{:.5e}'.format(losses[-1]),'eloss':'{:.5e}'.format(energy_loss), 'bloss':'{:.5e}'.format(boundary_loss), 'lr':'{:.1e}'.format(lr_history[-1]), 'p':'{:.1e}'.format(Pre_load), 'w':'{:.1e}'.format(loss_weight)})
         
         if epoch % 5000 == 0:
             # 保存模型

@@ -34,9 +34,10 @@ depth=4  # ResNet的深度
 epoch_num=50000  # 训练的epoch数
 lr=5e-5 #  学习率
 lr_scheduler='Exp'
-loss_weight=1e6 # 边界损失函数的权重
+loss_weight=[1e6, 7e6, 1e6] # 边界损失函数的权重 [初始值，最大值，步长]
+weight_step_interval=5000  # 单位：步
 
 #---------------------------文件路径-----------------------------------------------
 mesh_path=f"Grain3D/mesh/{model_shape}_mesh_{mesh_points}.msh"
-model_save_path=f"Grain3D/Results_piecewise/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/{Pre_value[0]:.0e}-{Pre_value[2]:.0e}-{Pre_step_interval:.0e}"
-Evaluate_save_path=f"Grain3D/Results_piecewise/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/{Pre_value[0]:.0e}-{Pre_value[2]:.0e}-{Pre_step_interval:.0e}/{model_shape}_NeoHook"
+model_save_path=f"Grain3D/Results_piecewise/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight[0]:.0e}/p[{Pre_value[0]/1e6}-{Pre_value[2]/1e6}-{Pre_step_interval:.0f}]xw[{loss_weight[0]:.0e}-{loss_weight[2]:.0e}-{weight_step_interval:.0f}]"
+Evaluate_save_path=f"Grain3D/Results_piecewise/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight[0]:.0e}/p[{Pre_value[0]/1e6}-{Pre_value[2]/1e6}-{Pre_step_interval:.0f}]xw[{loss_weight[0]:.0e}-{loss_weight[2]:.0e}-{weight_step_interval:.0f}]/{model_shape}_NeoHook"
