@@ -36,6 +36,9 @@ def evaluate_model(model, xyz, scaling):
     duydxyz = grad(u_pred[:, 1].unsqueeze(1), xyz_tensor, torch.ones(xyz_tensor.size()[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     duzdxyz = grad(u_pred[:, 2].unsqueeze(1), xyz_tensor, torch.ones(xyz_tensor.size()[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     grad_u = torch.stack([duxdxyz, duydxyz, duzdxyz], dim=1)  # [N,3,3]
+    grad_norm = torch.norm(grad_u, dim=-1)  # [N,4,3]
+    max_grad_norm = torch.max(grad_norm)
+    print(f"最大梯度范数: {max_grad_norm.item()}")
     
     # 3. 计算变形梯度张量 F = I + ∇u
     I = torch.eye(3, device=dev).unsqueeze(0)  # [1,3,3]
@@ -108,7 +111,7 @@ def evaluate_model(model, xyz, scaling):
 
 # 从文件加载已经训练完成的模型
 # model=MultiLayerNet(D_in=3, H=30, D_out=3).cuda()
-dem_epoch=35000
+dem_epoch=10000
 model=ResNet(input_size=cfg.input_size, hidden_size=cfg.hidden_size, output_size=cfg.output_size, depth=cfg.depth).cuda()
 model.load_state_dict(torch.load(f"{cfg.model_save_path}/dem_epoch{dem_epoch}.pth"))
 model.eval()  # 设置模型为evaluation状态
