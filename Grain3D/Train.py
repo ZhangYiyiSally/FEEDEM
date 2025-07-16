@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50,  eta_min=1e-6 )  # 余弦退火：T_max为半周期（epoch数），eta_min为最小学习率
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,mode='min', factor=0.1, patience=10, threshold=1e-4)  # 按指标衰减：当loss在patience个epoch内下降小于阈值threshold时，将学习率降低为原来的factor倍
 
-    print(f"train: model_scale={cfg.model_scale}, Net={cfg.depth}x{cfg.input_size}-{cfg.hidden_size}-{cfg.output_size}, lr={learning_rate:.0e}, scheduler={cfg.lr_scheduler}{scheduler.gamma}, loss_weight={cfg.loss_weight:.0e}")
+    print(f"train: model_scale={cfg.model_scale}, Net={cfg.depth}x{cfg.input_size}-{cfg.hidden_size}-{cfg.output_size}, lr={learning_rate:.0e}, scheduler={cfg.lr_scheduler}{scheduler.gamma}, loss_weight={cfg.loss_weight:.0e}, Rad={cfg.GRAD_CLIP_RADIUS/cfg.model_scale:.0e}, Grad={cfg.MAX_GRAD_NORM:.2f}")
     tqdm_epoch = tqdm(range(start_epoch, epoch_num), desc='epoches',colour='red', dynamic_ncols=True)
     for epoch in range(start_epoch, epoch_num):
         
