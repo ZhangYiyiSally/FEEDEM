@@ -35,7 +35,7 @@ class Loss:
         # print("Internal Energy:", integral_strainenergy.item())
         # print("External Work:", integral_externalwork.item())
         # print("Boundary Loss:", integral_boundaryloss.item())
-        return loss, energy_loss, cfg.loss_weight*integral_boundaryloss
+        return loss, energy_loss, cfg.loss_weight*integral_boundaryloss, self.max_grad_norm, self.max_grad_scale_norm
 
     def GetU(self, xyz_field: torch.Tensor) -> torch.Tensor:
         u = self.model(xyz_field)
@@ -69,7 +69,7 @@ class Loss:
         # 梯度裁剪 (仅在反向传播时影响)
         clipped_grad_norm = torch.where(
         grad_norm > MAX_GRAD_NORM,
-        MAX_GRAD_NORM + (grad_norm - MAX_GRAD_NORM).detach(),
+        MAX_GRAD_NORM,
         grad_norm
         )
         
@@ -84,6 +84,8 @@ class Loss:
         duydxyz_scale=duydxyz*scale_factor[..., 1]
         duzdxyz_scale=duzdxyz*scale_factor[..., 2]
         grad_u_scale = torch.stack([duxdxyz_scale, duydxyz_scale, duzdxyz_scale], dim=-2)  # [N, 4, 3, 3]
+        self.max_grad_norm=torch.max(grad_norm)
+        self.max_grad_scale_norm=torch.max(torch.norm(grad_u_scale, dim=-1))
 
         # 3. 计算变形梯度张量 F = I + ∇u
         I = torch.eye(3, device=self.dev)  # [3,3]

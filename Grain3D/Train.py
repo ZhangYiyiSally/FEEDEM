@@ -54,8 +54,8 @@ if __name__ == '__main__':
     # 开始训练, 设置训练参数
     start_time = time.time()
     losses = []
-    # eL2=[]
-    # eH1=[]
+    grad_norm=[]
+    grad_scale_norm=[]
     epoch_num=cfg.epoch_num
     learning_rate=cfg.lr
         
@@ -77,7 +77,7 @@ if __name__ == '__main__':
         
         # # 计算损失函数
         loss=Loss(dem)
-        loss_value, energy_loss, boundary_loss=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym, lin_Singular)
+        loss_value, energy_loss, boundary_loss, max_grad_norm, max_grad_scale_norm=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym, lin_Singular)
         # 反向传播
         optimizer.zero_grad()
         loss_value.backward()
@@ -100,18 +100,22 @@ if __name__ == '__main__':
         # eL2.append(util.errorL2(dem, mesh.points, dev).item())
         # eH1.append(util.errorH1(dem, mesh.points, dev).item())
         lr_history.append(optimizer.param_groups[0]['lr'])
+        grad_norm.append(max_grad_norm.item())
+        grad_scale_norm.append(max_grad_scale_norm.item())
 
 
         # 更新epoch进度条
         tqdm_epoch.update()
-        tqdm_epoch.set_postfix({'loss':'{:.5f}'.format(losses[-1]),'eloss':'{:.5f}'.format(energy_loss), 'bloss':'{:.5f}'.format(boundary_loss), 'lr':'{:.5f}'.format(lr_history[-1])})
+        tqdm_epoch.set_postfix({'loss':'{:.5f}'.format(losses[-1]), 'bloss':'{:.5f}'.format(boundary_loss), 'gn':'{:.5f}'.format(max_grad_norm), 'gns':'{:.5f}'.format(max_grad_scale_norm)})
 
         if epoch % 5000 == 0:
             # 保存模型
             os.makedirs(cfg.model_save_path, exist_ok=True)
             torch.save(dem.state_dict(), f"{cfg.model_save_path}/dem_epoch{epoch}.pth")
-            plot_loss(losses, lr_history)
-            plt.savefig(f"{cfg.model_save_path}/training_curve_middle.png")
+            # plot_loss(losses, lr_history)
+            # plt.savefig(f"{cfg.model_save_path}/training_curve_middle.png")
+            with open(f"{cfg.model_save_path}/gn_middle_seed{cfg.seed}.txt", 'w') as f:
+                f.write('\n'.join(map(str, grad_norm)) + '\n')
             with open(f"{cfg.model_save_path}/loss_middle_seed{cfg.seed}.txt", 'w') as f:
                 f.write('\n'.join(map(str, losses)) + '\n')
     
@@ -120,10 +124,10 @@ if __name__ == '__main__':
     plt.savefig(f"{cfg.model_save_path}/training_curve_epoch{epoch_num}.png")
     with open(f"{cfg.model_save_path}/loss_epoch{epoch_num}_seed{cfg.seed}.txt", 'w') as f:
         f.write('\n'.join(map(str, losses)) + '\n')
-    # with open(f"{cfg.model_save_path}/errorL2_epoch{epoch_num}_seed{cfg.seed}.txt", 'w') as f:
-        # f.write('\n'.join(map(str, eL2)) + '\n')
-    # with open(f"{cfg.model_save_path}/errorH1_epoch{epoch_num}_seed{cfg.seed}.txt", 'w') as f:
-        # f.write('\n'.join(map(str, eH1)) + '\n')
+    with open(f"{cfg.model_save_path}/grad_norm_epoch{epoch_num}_seed{cfg.seed}.txt", 'w') as f:
+        f.write('\n'.join(map(str, grad_norm)) + '\n')
+    with open(f"{cfg.model_save_path}/grad_scale_norm_epoch{epoch_num}_seed{cfg.seed}.txt", 'w') as f:
+        f.write('\n'.join(map(str, grad_scale_norm)) + '\n')
     with open(f"{cfg.model_save_path}/lr_epoch{epoch}_seed{cfg.seed}.txt", 'w') as f:
         f.write('\n'.join(map(str, lr_history)) + '\n')
 

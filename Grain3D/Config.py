@@ -20,7 +20,7 @@ Dir_u=[0.0, 0.0, 0.0]
 #-------------------------------压力边界条件设置-------------------------------------
 # ----------Pre_marker：边界标记，Pre_value：边界指定力---------------
 Pre_marker='InSurface'
-Pre_value=1e6  # 单位：Pa
+Pre_value=7e6  # 单位：Pa
 #-------------------------------对称边界条件设置-------------------------------------
 # ----------Sym_marker：边界标记---------------
 Sym_marker='Symmetry'
@@ -28,17 +28,17 @@ Sym_marker='Symmetry'
 Singular_marker='Singularity'
 #--------------------------------神经网络设置-----------------------------------------
 input_size=3  # ResNet的输入大小
-hidden_size=200  # ResNet的隐藏层大小
+hidden_size=300  # ResNet的隐藏层大小
 output_size=3  # ResNet的输出大小
 depth=4  # ResNet的深度
 #--------------------------------训练参数设置-----------------------------------------
 epoch_num=100000  # 训练的epoch数
-lr=4e-4 #  学习率
-lr_scheduler='Exp'
+lr=8e-4 #  学习率
+lr_scheduler='9995Exp'
 loss_weight=1e8 # 边界损失函数的权重
 #--------------------------------正则化参数：梯度裁剪设置-----------------------------------------
 GRAD_CLIP_RADIUS = model_scale*0.06    # 受影响的半径（特征长度的5-10%）
-MAX_GRAD_NORM = 1.5        # 最大允许梯度范数
+MAX_GRAD_NORM = 0.45        # 最大允许梯度范数
 
 #---------------------------文件路径-----------------------------------------------
 mesh_path=f"Grain3D/mesh/{model_shape}_mesh_{mesh_points}.msh"
