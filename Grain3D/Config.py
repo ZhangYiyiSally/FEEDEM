@@ -42,5 +42,5 @@ MAX_GRAD_NORM = 0.45        # 最大允许梯度范数
 
 #---------------------------文件路径-----------------------------------------------
 mesh_path=f"Grain3D/mesh/{model_shape}_mesh_{mesh_points}.msh"
-model_save_path=f"Grain3D/Results_Regular/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/Rad{GRAD_CLIP_RADIUS/model_scale:.0e}Grad{MAX_GRAD_NORM:.2f}"
-Evaluate_save_path=f"Grain3D/Results_Regular/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/Rad{GRAD_CLIP_RADIUS/model_scale:.0e}Grad{MAX_GRAD_NORM:.2f}/{model_shape}_NeoHook"
+model_save_path=f"Grain3D/Results_ClipGrad/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/Rad{GRAD_CLIP_RADIUS/model_scale:.0e}Grad{MAX_GRAD_NORM:.2f}"
+Evaluate_save_path=f"Grain3D/Results_ClipGrad/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/Rad{GRAD_CLIP_RADIUS/model_scale:.0e}Grad{MAX_GRAD_NORM:.2f}/{model_shape}_NeoHook"
