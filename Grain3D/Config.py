@@ -37,10 +37,10 @@ lr=8e-4 #  学习率
 lr_scheduler='9995Exp'
 loss_weight=1e8 # 边界损失函数的权重
 #--------------------------------正则化参数：梯度裁剪设置-----------------------------------------
-GRAD_CLIP_RADIUS = model_scale*0.06    # 受影响的半径（特征长度的5-10%）
-MAX_GRAD_NORM = 0.45        # 最大允许梯度范数
+GRAD_CLIP_RADIUS = model_scale*0.1    # 受影响的半径（特征长度的5-10%）
+ENERGY_WEIGHT = 2        # 能量权重
 
 #---------------------------文件路径-----------------------------------------------
 mesh_path=f"Grain3D/mesh/{model_shape}_mesh_{mesh_points}.msh"
-model_save_path=f"Grain3D/Results_Regular/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/Rad{GRAD_CLIP_RADIUS/model_scale:.0e}Grad{MAX_GRAD_NORM:.2f}"
-Evaluate_save_path=f"Grain3D/Results_Regular/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/Rad{GRAD_CLIP_RADIUS/model_scale:.0e}Grad{MAX_GRAD_NORM:.2f}/{model_shape}_NeoHook"
+model_save_path=f"Grain3D/Results_Regular/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/Rad{GRAD_CLIP_RADIUS/model_scale:.0e}Energy{ENERGY_WEIGHT:.1f}"
+Evaluate_save_path=f"Grain3D/Results_Regular/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_weight{loss_weight:.0e}/Rad{GRAD_CLIP_RADIUS/model_scale:.0e}Energy{ENERGY_WEIGHT:.1f}/{model_shape}_NeoHook"

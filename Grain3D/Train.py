@@ -71,13 +71,13 @@ if __name__ == '__main__':
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50,  eta_min=1e-6 )  # 余弦退火：T_max为半周期（epoch数），eta_min为最小学习率
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,mode='min', factor=0.1, patience=10, threshold=1e-4)  # 按指标衰减：当loss在patience个epoch内下降小于阈值threshold时，将学习率降低为原来的factor倍
 
-    print(f"train: model_scale={cfg.model_scale}, Net={cfg.depth}x{cfg.input_size}-{cfg.hidden_size}-{cfg.output_size}, lr={learning_rate:.0e}, scheduler={cfg.lr_scheduler}{scheduler.gamma}, loss_weight={cfg.loss_weight:.0e}, Rad={cfg.GRAD_CLIP_RADIUS/cfg.model_scale:.0e}, Grad={cfg.MAX_GRAD_NORM:.2f}")
+    print(f"train: model_scale={cfg.model_scale}, Net={cfg.depth}x{cfg.input_size}-{cfg.hidden_size}-{cfg.output_size}, lr={learning_rate:.0e}, scheduler={cfg.lr_scheduler}{scheduler.gamma}, loss_weight={cfg.loss_weight:.0e}, Rad={cfg.GRAD_CLIP_RADIUS/cfg.model_scale:.0e}, Energy={cfg.ENERGY_WEIGHT:.1f}")
     tqdm_epoch = tqdm(range(start_epoch, epoch_num), desc='epoches',colour='red', dynamic_ncols=True)
     for epoch in range(start_epoch, epoch_num):
         
         # # 计算损失函数
         loss=Loss(dem)
-        loss_value, energy_loss, boundary_loss, max_grad_norm, max_grad_scale_norm=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym, lin_Singular)
+        loss_value, energy_loss, boundary_loss, max_grad_norm=loss.loss_function(dom, bc_Dir, bc_Pre, bc_Sym, lin_Singular)
         # 反向传播
         optimizer.zero_grad()
         loss_value.backward()
@@ -101,14 +101,13 @@ if __name__ == '__main__':
         # eH1.append(util.errorH1(dem, mesh.points, dev).item())
         lr_history.append(optimizer.param_groups[0]['lr'])
         grad_norm.append(max_grad_norm.item())
-        grad_scale_norm.append(max_grad_scale_norm.item())
 
 
         # 更新epoch进度条
         tqdm_epoch.update()
-        tqdm_epoch.set_postfix({'loss':'{:.5f}'.format(losses[-1]), 'bloss':'{:.5f}'.format(boundary_loss), 'gn':'{:.5f}'.format(max_grad_norm), 'gns':'{:.5f}'.format(max_grad_scale_norm)})
+        tqdm_epoch.set_postfix({'loss':'{:.5f}'.format(losses[-1]), 'bloss':'{:.5f}'.format(boundary_loss), 'gn':'{:.5f}'.format(max_grad_norm)})
 
-        if epoch % 5000 == 0:
+        if epoch % 2000 == 0:
             # 保存模型
             os.makedirs(cfg.model_save_path, exist_ok=True)
             torch.save(dem.state_dict(), f"{cfg.model_save_path}/dem_epoch{epoch}.pth")
@@ -126,8 +125,6 @@ if __name__ == '__main__':
         f.write('\n'.join(map(str, losses)) + '\n')
     with open(f"{cfg.model_save_path}/grad_norm_epoch{epoch_num}_seed{cfg.seed}.txt", 'w') as f:
         f.write('\n'.join(map(str, grad_norm)) + '\n')
-    with open(f"{cfg.model_save_path}/grad_scale_norm_epoch{epoch_num}_seed{cfg.seed}.txt", 'w') as f:
-        f.write('\n'.join(map(str, grad_scale_norm)) + '\n')
     with open(f"{cfg.model_save_path}/lr_epoch{epoch}_seed{cfg.seed}.txt", 'w') as f:
         f.write('\n'.join(map(str, lr_history)) + '\n')
 

@@ -35,7 +35,7 @@ class Loss:
         # print("Internal Energy:", integral_strainenergy.item())
         # print("External Work:", integral_externalwork.item())
         # print("Boundary Loss:", integral_boundaryloss.item())
-        return loss, energy_loss, cfg.loss_weight*integral_boundaryloss, self.max_grad_norm, self.max_grad_scale_norm
+        return loss, energy_loss, cfg.loss_weight*integral_boundaryloss, self.max_grad_norm
 
     def GetU(self, xyz_field: torch.Tensor) -> torch.Tensor:
         u = self.model(xyz_field)
@@ -57,7 +57,7 @@ class Loss:
 
         # 1. 位移梯度正则化参数（可配置）
         GRAD_CLIP_RADIUS = cfg.GRAD_CLIP_RADIUS    # 受影响的半径（特征长度的5-10%）
-        MAX_GRAD_NORM = cfg.MAX_GRAD_NORM        # 最大允许梯度范数
+        ENERGY_WEIGHT = cfg.ENERGY_WEIGHT        # 能量权重
 
         # 2. 计算梯度，并添加梯度范数约束
         duxdxyz = grad(pred_u[:, :, 0], xyz_field, torch.ones_like(pred_u[:, :, 0]), create_graph=True, retain_graph=True)[0] # [N, 4, 3]
@@ -65,31 +65,14 @@ class Loss:
         duzdxyz = grad(pred_u[:, :, 2], xyz_field, torch.ones_like(pred_u[:, :, 2]), create_graph=True, retain_graph=True)[0]
         grad_u = torch.stack([duxdxyz, duydxyz, duzdxyz], dim=-2)  # [N,4,3,3]
         grad_norm = torch.norm(grad_u, dim=-1)  # [N,4,3]
-        
-        # 梯度裁剪 (仅在反向传播时影响)
-        clipped_grad_norm = torch.where(
-        grad_norm > MAX_GRAD_NORM,
-        MAX_GRAD_NORM,
-        grad_norm
-        )
-        
+                
         # 创建权重掩码：距离越近权重越小
         reg_mask = torch.exp(-min_distances / GRAD_CLIP_RADIUS)  # [N, 4, 1]
-        # 应用正则化：混合原始梯度和裁剪后梯度
-        regularized_grad_norm = (1 - reg_mask) * grad_norm + reg_mask * clipped_grad_norm  # [N, 4, 3]
-
-        # 重构梯度张量（保持计算图）
-        scale_factor = (regularized_grad_norm / (grad_norm + 1e-8)).unsqueeze(-2)  # [N, 4, 1, 3]
-        duxdxyz_scale=duxdxyz*scale_factor[..., 0] # [N, 4, 3]
-        duydxyz_scale=duydxyz*scale_factor[..., 1]
-        duzdxyz_scale=duzdxyz*scale_factor[..., 2]
-        grad_u_scale = torch.stack([duxdxyz_scale, duydxyz_scale, duzdxyz_scale], dim=-2)  # [N, 4, 3, 3]
         self.max_grad_norm=torch.max(grad_norm)
-        self.max_grad_scale_norm=torch.max(torch.norm(grad_u_scale, dim=-1))
 
         # 3. 计算变形梯度张量 F = I + ∇u
         I = torch.eye(3, device=self.dev)  # [3,3]
-        F = I + grad_u_scale  # [N,4,3,3]
+        F = I + grad_u  # [N,4,3,3]
 
         # 计算变形梯度的行列式 J = det(F)
         J = torch.det(F).unsqueeze(-1) # 变形梯度行列式[N,4,1]
