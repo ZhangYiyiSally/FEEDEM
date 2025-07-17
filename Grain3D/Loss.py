@@ -68,9 +68,9 @@ class Loss:
         
         # 梯度裁剪 (仅在反向传播时影响)
         clipped_grad_norm = torch.where(
-        grad_norm > MAX_GRAD_NORM,
-        MAX_GRAD_NORM,
-        grad_norm
+            grad_norm > MAX_GRAD_NORM,
+            MAX_GRAD_NORM + (grad_norm - MAX_GRAD_NORM).detach(),
+            grad_norm
         )
         
         # 创建权重掩码：距离越近权重越小
@@ -97,9 +97,7 @@ class Loss:
         I1=torch.sum(F**2, dim=[-2, -1]).unsqueeze(-1) # [N,4,1]
         EPS=1e-8
 
-        # 4. 在固定点附近降低应变能贡献
-        energy_weight = 1 - reg_mask # [N, 4, 1]
-        strainenergy_tmp = (0.5 * lam * (torch.log(J + EPS) * torch.log(J + EPS)) - mu * torch.log(J + EPS) + 0.5 * mu * (I1 - 3)) * energy_weight
+        strainenergy_tmp = 0.5 * lam * (torch.log(J + EPS) * torch.log(J + EPS)) - mu * torch.log(J + EPS) + 0.5 * mu * (I1 - 3)
         strainenergy = strainenergy_tmp[:, :, 0] # [N, 4]
     
         return strainenergy
