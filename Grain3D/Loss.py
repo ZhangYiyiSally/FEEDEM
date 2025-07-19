@@ -81,7 +81,7 @@ class Loss:
         EPS=1e-8
 
         # 4. 在固定点附近降低应变能贡献
-        energy_weight = 1 - reg_mask # [N, 4, 1]
+        energy_weight = (1 - reg_mask)*ENERGY_WEIGHT # [N, 4, 1]
         strainenergy_tmp = (0.5 * lam * (torch.log(J + EPS) * torch.log(J + EPS)) - mu * torch.log(J + EPS) + 0.5 * mu * (I1 - 3)) * energy_weight
         strainenergy = strainenergy_tmp[:, :, 0] # [N, 4]
     
