@@ -31,9 +31,10 @@ hidden_size=200  # ResNet的隐藏层大小
 output_size=3  # ResNet的输出大小
 depth=4  # ResNet的深度
 #--------------------------------训练参数设置-----------------------------------------
-epoch_num=50000  # 训练的epoch数
+epoch_num=70000  # 训练的epoch数
 lr=2e-4 #  学习率
 lr_scheduler='Cos'
+gamma=0.9999
 T_max=10000
 eta_min=1e-6
 loss_weight=[1e5, 1e8, 1e8-1e5] # 边界损失函数的权重 [初始值，最大值，步长]
@@ -41,5 +42,9 @@ weight_step_interval=50000  # 单位：步
 
 #---------------------------文件路径-----------------------------------------------
 mesh_path=f"Grain3D/mesh/{model_shape}_mesh_{mesh_points}.msh"
-model_save_path=f"Grain3D/Results_piecewise/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_{T_max}x{eta_min:.1e}/p[{Pre_value[0]/1e6}-{Pre_value[2]/1e6}-{Pre_step_interval:.0f}]xw[{loss_weight[0]:.0e}-{loss_weight[2]:.0e}-{weight_step_interval:.0f}]"
-Evaluate_save_path=f"Grain3D/Results_piecewise/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_{T_max}x{eta_min:.1e}/p[{Pre_value[0]/1e6}-{Pre_value[2]/1e6}-{Pre_step_interval:.0f}]xw[{loss_weight[0]:.0e}-{loss_weight[2]:.0e}-{weight_step_interval:.0f}]/{model_shape}_NeoHook"
+if lr_scheduler == 'Cos':
+    model_save_path=f"Grain3D/Results/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_{T_max}x{eta_min:.1e}/p[{Pre_value[0]/1e6}-{Pre_value[2]/1e6}-{Pre_step_interval:.0f}]xw[{loss_weight[0]:.0e}-{loss_weight[2]:.0e}-{weight_step_interval:.0f}]"
+    Evaluate_save_path=f"Grain3D/Results/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_{T_max}x{eta_min:.1e}/p[{Pre_value[0]/1e6}-{Pre_value[2]/1e6}-{Pre_step_interval:.0f}]xw[{loss_weight[0]:.0e}-{loss_weight[2]:.0e}-{weight_step_interval:.0f}]/{model_shape}_NeoHook"
+if lr_scheduler == 'Exp':
+    model_save_path=f"Grain3D/Results/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_{gamma}/p[{Pre_value[0]/1e6}-{Pre_value[2]/1e6}-{Pre_step_interval:.0f}]xw[{loss_weight[0]:.0e}-{loss_weight[2]:.0e}-{weight_step_interval:.0f}]"
+    Evaluate_save_path=f"Grain3D/Results/{model_shape}x{model_scale}_{mesh_points}_Net{depth}x{input_size}-{hidden_size}-{output_size}_{lr_scheduler}{lr:.0e}_{gamma}/p[{Pre_value[0]/1e6}-{Pre_value[2]/1e6}-{Pre_step_interval:.0f}]xw[{loss_weight[0]:.0e}-{loss_weight[2]:.0e}-{weight_step_interval:.0f}]/{model_shape}_NeoHook"

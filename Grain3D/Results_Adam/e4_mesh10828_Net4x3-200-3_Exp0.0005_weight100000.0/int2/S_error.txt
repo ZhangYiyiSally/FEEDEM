@@ -1,6 +1,0 @@
-% Model:              15.mph
-% Version:            COMSOL 6.2.0.339
-% Date:               May 30 2025, 13:11
-% Table:              Ser_no driven data - Ser_no driven data
-% abs(int56(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int57(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int58(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int59(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int60(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int61(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int62(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int63(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int64(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int65(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int66(X, Y, Z)-solid.misesGp)/abs(solid.misesGp)
-0.9969516904554446                                     0.3172408165124594                                   0.2116167218599134                                   0.16545146691101179                                  0.14590866522361776                                  0.13176910791162702                                  0.12152050541366                                     0.11484721079306891                                  0.11067232222260824                                  0.1081004207476929                                   0.10656099448028063

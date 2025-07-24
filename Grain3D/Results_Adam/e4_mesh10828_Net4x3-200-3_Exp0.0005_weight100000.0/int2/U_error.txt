@@ -1,6 +1,0 @@
-% Model:              15.mph
-% Version:            COMSOL 6.2.0.339
-% Date:               May 30 2025, 13:10
-% Table:              Uer_no driven data - Uer_no driven data
-% abs(int1(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int2(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int3(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int4(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int5(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int6(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int7(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int8(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int9(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int10(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int11(X, Y, Z)-solid.disp)/abs(solid.disp)
-1.5561728949714135                              0.12802262913825205                           0.07492644544713184                           0.04971171921442546                           0.04353842938208574                           0.04067754852714425                           0.038838952543461064                          0.03770303612702392                           0.0369544654512941                            0.0364678602007775                             0.03615620927731925
