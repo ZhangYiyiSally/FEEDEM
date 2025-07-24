@@ -17,11 +17,12 @@ class Loss:
         self.model = model
         pass
         
-    def loss_function(self, Tetra_coord: torch.Tensor, Dir_Triangle_coord: torch.Tensor, Pre_Triangle_coord: torch.Tensor, Sym_Triangle_coord: torch.Tensor) -> torch.Tensor:
+    def loss_function(self, Tetra_coord: torch.Tensor, Dir_Triangle_coord: torch.Tensor, Pre_Triangle_coord: torch.Tensor, Sym_Triangle_coord: torch.Tensor, Pre_load: float, loss_weight: float) -> torch.Tensor:
         self.Tetra_coord=Tetra_coord
         self.Dir_Triangle_coord=Dir_Triangle_coord
         self.Pre_Triangle_coord=Pre_Triangle_coord
         self.Sym_Triangle_coord=Sym_Triangle_coord
+        self.Pre_load=Pre_load
         integral=GaussIntegral()
         integral_strainenergy=integral.Integral3D(self.StrainEnergy, cfg.n_int3D, Tetra_coord)
         integral_externalwork=integral.Integral2D(self.ExternalWork, cfg.n_int2D, Pre_Triangle_coord)
@@ -29,12 +30,12 @@ class Loss:
         integral_boundaryloss=self.BoundaryLoss(Dir_Triangle_coord, Sym_Triangle_coord)
 
         energy_loss = integral_strainenergy - integral_externalwork
-        loss = energy_loss + cfg.loss_weight*integral_boundaryloss
+        loss = energy_loss + loss_weight*integral_boundaryloss
         
         # print("Internal Energy:", integral_strainenergy.item())
         # print("External Work:", integral_externalwork.item())
         # print("Boundary Loss:", integral_boundaryloss.item())
-        return loss, energy_loss, cfg.loss_weight*integral_boundaryloss
+        return loss, energy_loss, loss_weight*integral_boundaryloss
 
     def GetU(self, xyz_field: torch.Tensor) -> torch.Tensor:
         u = self.model(xyz_field)
@@ -52,19 +53,36 @@ class Loss:
         duxdxyz = grad(pred_u[:, :, 0], xyz_field, torch.ones_like(pred_u[:, :, 0]), create_graph=True, retain_graph=True)[0]
         duydxyz = grad(pred_u[:, :, 1], xyz_field, torch.ones_like(pred_u[:, :, 1]), create_graph=True, retain_graph=True)[0]
         duzdxyz = grad(pred_u[:, :, 2], xyz_field, torch.ones_like(pred_u[:, :, 2]), create_graph=True, retain_graph=True)[0]
-        Fxx = duxdxyz[:, :, 0].unsqueeze(2) + 1
-        Fxy = duxdxyz[:, :, 1].unsqueeze(2) + 0
-        Fxz = duxdxyz[:, :, 2].unsqueeze(2) + 0
-        Fyx = duydxyz[:, :, 0].unsqueeze(2) + 0
-        Fyy = duydxyz[:, :, 1].unsqueeze(2) + 1
-        Fyz = duydxyz[:, :, 2].unsqueeze(2) + 0
-        Fzx = duzdxyz[:, :, 0].unsqueeze(2) + 0
-        Fzy = duzdxyz[:, :, 1].unsqueeze(2) + 0
-        Fzz = duzdxyz[:, :, 2].unsqueeze(2) + 1
-        detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
-        trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
+        # Fxx = duxdxyz[:, :, 0].unsqueeze(2) + 1
+        # Fxy = duxdxyz[:, :, 1].unsqueeze(2) + 0
+        # Fxz = duxdxyz[:, :, 2].unsqueeze(2) + 0
+        # Fyx = duydxyz[:, :, 0].unsqueeze(2) + 0
+        # Fyy = duydxyz[:, :, 1].unsqueeze(2) + 1
+        # Fyz = duydxyz[:, :, 2].unsqueeze(2) + 0
+        # Fzx = duzdxyz[:, :, 0].unsqueeze(2) + 0
+        # Fzy = duzdxyz[:, :, 1].unsqueeze(2) + 0
+        # Fzz = duzdxyz[:, :, 2].unsqueeze(2) + 1
+        # detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
+        # trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
 
-        strainenergy_tmp = 0.5 * lam * (torch.log(detF) * torch.log(detF)) - mu * torch.log(detF) + 0.5 * mu * (trC - 3)
+        # EPS=1e-6
+        # strainenergy_tmp = 0.5 * lam * (torch.log(detF+EPS) * torch.log(detF+EPS)) - mu * torch.log(detF+EPS) + 0.5 * mu * (trC - 3)
+        # strainenergy = strainenergy_tmp[:, :, 0]
+
+        grad_u = torch.stack([duxdxyz, duydxyz, duzdxyz], dim=-2)  # [N,4,3,3]
+    
+        # 计算变形梯度张量 F = I + ∇u
+        I = torch.eye(3, device=self.dev)  # [3,3]
+        F = I + grad_u  # [N,3,3]
+
+        # 计算变形梯度的行列式 J = det(F)
+        J = torch.det(F).unsqueeze(-1) # 变形梯度行列式
+        # J_safe=nn.functional.softplus(J) # 防止负体积单元
+
+        I1=torch.sum(F**2, dim=[-2, -1]).unsqueeze(-1)
+
+        EPS=1e-8
+        strainenergy_tmp = 0.5 * lam * (torch.log(J + EPS) * torch.log(J + EPS)) - mu * torch.log(J + EPS) + 0.5 * mu * (I1 - 3)
         strainenergy = strainenergy_tmp[:, :, 0]
     
         return strainenergy
@@ -86,7 +104,7 @@ class Loss:
         #"""计算外力做功"""
         u_pred = self.GetU(pressure_field)
         #计算每个单元的高斯积分点的压力向量
-        p= cfg.Pre_value*normals_unity.unsqueeze(1).expand(-1, u_pred.size(1), -1)
+        p= self.Pre_load*normals_unity.unsqueeze(1).expand(-1, u_pred.size(1), -1)
 
         external_work = torch.sum( -u_pred * p, dim=-1)
         return external_work

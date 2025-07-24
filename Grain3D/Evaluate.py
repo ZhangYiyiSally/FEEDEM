@@ -16,7 +16,8 @@ import Utility as util
 dev = torch.device(
     "cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-def evaluate_model(model, xyz):
+def evaluate_model(model, xyz, scaling):
+    xyz=xyz*scaling
     xyz_tensor = torch.from_numpy(xyz).float()
     xyz_tensor = xyz_tensor.to(dev)
     xyz_tensor.requires_grad_(True)
@@ -35,6 +36,9 @@ def evaluate_model(model, xyz):
     duydxyz = grad(u_pred[:, 1].unsqueeze(1), xyz_tensor, torch.ones(xyz_tensor.size()[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     duzdxyz = grad(u_pred[:, 2].unsqueeze(1), xyz_tensor, torch.ones(xyz_tensor.size()[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     grad_u = torch.stack([duxdxyz, duydxyz, duzdxyz], dim=1)  # [N,3,3]
+    grad_norm = torch.norm(grad_u, dim=-1)  # [N,4,3]
+    max_grad_norm = torch.max(grad_norm)
+    print(f"最大梯度范数: {max_grad_norm.item()}")
     
     # 3. 计算变形梯度张量 F = I + ∇u
     I = torch.eye(3, device=dev).unsqueeze(0)  # [1,3,3]
@@ -73,7 +77,7 @@ def evaluate_model(model, xyz):
 
     # 直接提取张量分量, 并转换为numpy格式便于写入vtu文件（保持索引一致性）
     # 预测的位移分量, tuple形式便于在vtu中计算合位移
-    u = u_pred.detach().cpu().numpy()
+    u = u_pred.detach().cpu().numpy()/scaling
     U = (np.float64(u[:,0]), np.float64(u[:,1]), np.float64(u[:,2]))
     # Green-Lagrange应变张量分量
     E11 = E[:, 0, 0].detach().cpu().numpy()
@@ -107,7 +111,7 @@ def evaluate_model(model, xyz):
 
 # 从文件加载已经训练完成的模型
 # model=MultiLayerNet(D_in=3, H=30, D_out=3).cuda()
-dem_epoch=0
+dem_epoch=80000
 model=ResNet(input_size=cfg.input_size, hidden_size=cfg.hidden_size, output_size=cfg.output_size, depth=cfg.depth).cuda()
 model.load_state_dict(torch.load(f"{cfg.model_save_path}/dem_epoch{dem_epoch}.pth"))
 model.eval()  # 设置模型为evaluation状态
@@ -122,7 +126,7 @@ xyz=mesh.points
 U, SVonMises, \
 E11, E12, E13, E22, E23, E33, \
 S11, S12, S13, S22, S23, S33, \
-sigma11, sigma12, sigma13, sigma22, sigma23, sigma33= evaluate_model(model, xyz)
+sigma11, sigma12, sigma13, sigma22, sigma23, sigma33= evaluate_model(model, xyz, cfg.model_scale)
 
 # all_cells=mesh.cell_data['gmsh:physical'][6]
 # 写入vtu网格文件
