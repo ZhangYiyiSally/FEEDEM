@@ -4,8 +4,9 @@ import meshio
 import matplotlib.pyplot as plt
 
 class Dataset:
-    def __init__(self, data_path: str, data_num: int):
+    def __init__(self, data_path: str, data_num: int, model_scale: float):
         self.data_num = data_num
+        self.model_scale = model_scale
         meshes = {}  # 存储所有网格数据
         for i in range(data_num):
             mesh = meshio.read(f"{data_path}/{i}.msh", file_format="gmsh")
@@ -20,6 +21,7 @@ class Dataset:
             mesh = self.meshes[i]
             AllPoint_idx=mesh.cells_dict['tetra']
             Tetra_coord[i] = mesh.points[AllPoint_idx]
+            Tetra_coord[i] = Tetra_coord[i]*self.model_scale # 缩放模型
             Tetra_coord[i] = torch.tensor(Tetra_coord[i], dtype=torch.float32).to(self.dev)
 
         return Tetra_coord
@@ -31,6 +33,7 @@ class Dataset:
             DirCell_idx=mesh.cell_sets_dict[marker]['triangle']
             DirPoint_idx=mesh.cells_dict['triangle'][DirCell_idx]
             Dir_Triangle_coord[i] = mesh.points[DirPoint_idx]
+            Dir_Triangle_coord[i] = Dir_Triangle_coord[i]*self.model_scale # 缩放模型
             Dir_Triangle_coord[i] = torch.tensor(Dir_Triangle_coord[i], dtype=torch.float32).to(self.dev)
             
         return Dir_Triangle_coord
@@ -42,6 +45,7 @@ class Dataset:
             PreCell_idx=mesh.cell_sets_dict[marker]['triangle']
             PrePoint_idx=mesh.cells_dict['triangle'][PreCell_idx]
             Pre_Triangle_coord[i] = mesh.points[PrePoint_idx]
+            Pre_Triangle_coord[i] = Pre_Triangle_coord[i]*self.model_scale # 缩放模型
             Pre_Triangle_coord[i] = torch.tensor(Pre_Triangle_coord[i], dtype=torch.float32).to(self.dev)
 
         return Pre_Triangle_coord
@@ -53,6 +57,7 @@ class Dataset:
             SymCell_idx=mesh.cell_sets_dict[marker]['triangle']
             SymPoint_idx=mesh.cells_dict['triangle'][SymCell_idx]
             Sym_Triangle_coord[i] = mesh.points[SymPoint_idx]
+            Sym_Triangle_coord[i] = Sym_Triangle_coord[i]*self.model_scale # 缩放模型
             Sym_Triangle_coord[i] = torch.tensor(Sym_Triangle_coord[i], dtype=torch.float32).to(self.dev)
 
         return Sym_Triangle_coord
