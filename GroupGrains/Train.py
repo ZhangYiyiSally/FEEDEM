@@ -139,7 +139,8 @@ if __name__ == '__main__':
 
         # 更新epoch进度条
         tqdm_epoch.update()
-        tqdm_epoch.set_postfix({'loss':'{:.5f}'.format(losses[-1]),'eloss':'{:.5f}'.format(total_eloss), 'bloss':'{:.5f}'.format(total_bloss), 'lr':'{:.5f}'.format(lr_history[-1])})
+        tqdm_epoch.set_postfix({'loss':'{:.5e}'.format(losses[-1]),'eloss':'{:.5e}'.format(total_eloss), 'bloss':'{:.5e}'.format(total_bloss), 'lr':'{:.1e}'.format(lr_history[-1]), 'p':'{:.1e}'.format(Pre_load), 'w':'{:.1e}'.format(loss_weight)})
+        
 
         if epoch % 5000 == 0:
             # 保存模型

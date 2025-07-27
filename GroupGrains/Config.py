@@ -25,7 +25,7 @@ Pre_step_interval=50000  # 单位：步
 Sym_marker='Symmetry'
 #--------------------------------神经网络设置-----------------------------------------
 input_size=3  # ResNet的输入大小
-hidden_size=256  # ResNet的隐藏层大小
+hidden_size=200  # ResNet的隐藏层大小
 output_size=3  # ResNet的输出大小
 depth=4  # ResNet的深度
 latent_dim=128  # 隐变量的维度
