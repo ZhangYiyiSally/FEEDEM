@@ -16,7 +16,8 @@ import Utility as util
 dev = torch.device(
     "cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-def evaluate_model(model, xyz):
+def evaluate_model(model, xyz, scaling):
+    xyz=xyz*scaling
     xyz_tensor = torch.from_numpy(xyz).float()
     xyz_tensor = xyz_tensor.to(dev)
     xyz_tensor.requires_grad_(True)
@@ -35,6 +36,9 @@ def evaluate_model(model, xyz):
     duydxyz = grad(u_pred[:, 1].unsqueeze(1), xyz_tensor, torch.ones(xyz_tensor.size()[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     duzdxyz = grad(u_pred[:, 2].unsqueeze(1), xyz_tensor, torch.ones(xyz_tensor.size()[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     grad_u = torch.stack([duxdxyz, duydxyz, duzdxyz], dim=1)  # [N,3,3]
+    grad_norm = torch.norm(grad_u, dim=-1)  # [N,4,3]
+    max_grad_norm = torch.max(grad_norm)
+    print(f"最大梯度范数: {max_grad_norm.item()}")
     
     # 3. 计算变形梯度张量 F = I + ∇u
     I = torch.eye(3, device=dev).unsqueeze(0)  # [1,3,3]
@@ -49,7 +53,9 @@ def evaluate_model(model, xyz):
     invC = torch.inverse(C) # C的逆
     
     # 6. 计算Green-Lagrange应变 E = 0.5*(C - I)
-    E = 0.5 * (C - I)
+    epsilon = 0.5 * (C - I)
+    principal_strains = torch.linalg.eigvalsh(epsilon)     # 形状 [n, 3]，升序排列
+    e1 = principal_strains[:, -1]
 
     # 7. 计算第二类Piola-Kirchhoff应力S = mu*(I - C^(-1)) + λ*ln(J)*C^(-1)
     S = mu * (I - invC) + lam * torch.log(J).unsqueeze(-1).unsqueeze(-1) * invC
@@ -73,15 +79,15 @@ def evaluate_model(model, xyz):
 
     # 直接提取张量分量, 并转换为numpy格式便于写入vtu文件（保持索引一致性）
     # 预测的位移分量, tuple形式便于在vtu中计算合位移
-    u = u_pred.detach().cpu().numpy()
+    u = u_pred.detach().cpu().numpy()/scaling
     U = (np.float64(u[:,0]), np.float64(u[:,1]), np.float64(u[:,2]))
     # Green-Lagrange应变张量分量
-    E11 = E[:, 0, 0].detach().cpu().numpy()
-    E12 = E[:, 0, 1].detach().cpu().numpy()
-    E13 = E[:, 0, 2].detach().cpu().numpy()
-    E22 = E[:, 1, 1].detach().cpu().numpy()
-    E23 = E[:, 1, 2].detach().cpu().numpy()
-    E33 = E[:, 2, 2].detach().cpu().numpy()
+    E11 = epsilon[:, 0, 0].detach().cpu().numpy()
+    E12 = epsilon[:, 0, 1].detach().cpu().numpy()
+    E13 = epsilon[:, 0, 2].detach().cpu().numpy()
+    E22 = epsilon[:, 1, 1].detach().cpu().numpy()
+    E23 = epsilon[:, 1, 2].detach().cpu().numpy()
+    E33 = epsilon[:, 2, 2].detach().cpu().numpy()
     # 第二类Piola-Kirchhoff应力张量分量
     S11 = S[:, 0, 0].detach().cpu().numpy()
     S12 = S[:, 0, 1].detach().cpu().numpy()
@@ -98,13 +104,16 @@ def evaluate_model(model, xyz):
     sigma33=s33.detach().cpu().numpy()
     # Von Mises应力    
     SVonMises = SVonMises.detach().cpu().numpy()
+    e1 = e1.detach().cpu().numpy()
     
 
-    return U, SVonMises, \
+    return U, SVonMises, e1, \
            E11, E12, E13, E22, E23, E33, \
            S11, S12, S13, S22, S23, S33, \
            sigma11, sigma12, sigma13, sigma22, sigma23, sigma33
+
 # 读取有限元网格
+# mesh0=meshio.read("DEFEM3D/Beam3D/beam_mesh0.msh", file_format="gmsh")
 mesh = meshio.read(cfg.mesh_path, file_format="gmsh")
 
 # 计算该有限元网格对应的预测值
@@ -118,14 +127,14 @@ for dem_epoch in range(0, cfg.epoch_num+1, 10000):
 
 
 
-    U, SVonMises, \
+    U, SVonMises, e1,\
     E11, E12, E13, E22, E23, E33, \
     S11, S12, S13, S22, S23, S33, \
-    sigma11, sigma12, sigma13, sigma22, sigma23, sigma33= evaluate_model(model, xyz)
+    sigma11, sigma12, sigma13, sigma22, sigma23, sigma33= evaluate_model(model, xyz, cfg.model_scale)
 
     # all_cells=mesh.cell_data['gmsh:physical'][6]
     # 写入vtu网格文件
-    util.FEMmeshtoVTK(f"{cfg.Evaluate_save_path}_epoch{dem_epoch}", mesh, pointdata={"U": U, "SVonMises": SVonMises, \
+    util.FEMmeshtoVTK(f"{cfg.Evaluate_save_path}_epoch{dem_epoch}", mesh, pointdata={"U": U, "SVonMises": SVonMises, "e1": e1, \
                                                                                  "E11": E11, "E12": E12, "E13": E13, \
                                                                                  "E22": E22, "E23": E23, "E33": E33, \
                                                                                  "S11": S11, "S12": S12, "S13": S13, \
@@ -136,7 +145,9 @@ for dem_epoch in range(0, cfg.epoch_num+1, 10000):
 
     U_data=np.hstack((xyz, np.linalg.norm(np.array(U).T, axis=1).reshape(-1,1)))
     SVonMises_data=np.hstack((xyz, SVonMises.reshape(-1,1)))
+    e1_data=np.hstack((xyz, e1.reshape(-1,1)))
 
     np.savetxt(f"{cfg.model_save_path}/U_epoch{dem_epoch}.txt", U_data, fmt='%f', delimiter=' ')
     np.savetxt(f"{cfg.model_save_path}/SVonMises_epoch{dem_epoch}.txt", SVonMises_data, fmt='%f', delimiter=' ')
+    np.savetxt(f"{cfg.model_save_path}/e1_epoch{dem_epoch}.txt", e1_data, fmt='%f', delimiter=' ')
     print(f"模型dem_epoch{dem_epoch}.pth的预测结果已保存到{cfg.model_save_path}/U_epoch{dem_epoch}.txt")
