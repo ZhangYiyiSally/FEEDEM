@@ -18,32 +18,32 @@ def read_error(path):
 
 Uer_Num0=[]
 Uer_Num2=[]
-Uer_Num5=[]
-Uer_Num10=[]
-Uer_Num20=[]
+Uer_Num4=[]
+Uer_Num6=[]
+Uer_Num8=[]
 Ser_Num0=[]
 Ser_Num2=[]
-Ser_Num5=[]
-Ser_Num10=[]
-Ser_Num20=[]
+Ser_Num4=[]
+Ser_Num6=[]
+Ser_Num8=[]
 
 mesh = meshio.read(cfg.mesh_path, file_format="gmsh")
 dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 # 绘制训练步骤
 range_x=100000
-steps = np.arange(10000, range_x+1, 10000)
+steps = np.arange(0, range_x+1, 10000)
 
-Uer_Num0=read_error("Grain3D/Results_Adam/e4_mesh10828_Net4x3-200-3_Exp0.0005_weight100000.0/int2/U_error.txt")[1:]
-Uer_Num2=read_error("Grain3D_DataDriven/Results_Adam/DrivenNum2/U_error.txt")[1:]
-Uer_Num5=read_error("Grain3D_DataDriven/Results_Adam/DrivenNum5/U_error.txt")[1:]
-Uer_Num10=read_error("Grain3D_DataDriven/Results_Adam/DrivenNum10/U_error.txt")[1:]
-Uer_Num20=read_error("Grain3D_DataDriven/Results_Adam/DrivenNum20/U_error.txt")[1:]
-Ser_Num0=read_error("Grain3D/Results_Adam/e4_mesh10828_Net4x3-200-3_Exp0.0005_weight100000.0/int2/S_error.txt")[1:]
-Ser_Num2=read_error("Grain3D_DataDriven/Results_Adam/DrivenNum2/S_error.txt")[1:]
-Ser_Num5=read_error("Grain3D_DataDriven/Results_Adam/DrivenNum5/S_error.txt")[1:]
-Ser_Num10=read_error("Grain3D_DataDriven/Results_Adam/DrivenNum10/S_error.txt")[1:]
-Ser_Num20=read_error("Grain3D_DataDriven/Results_Adam/DrivenNum20/S_error.txt")[1:]
+Uer_Num0=read_error("Grain3D_DataDriven/Results/U_Num0_error.txt")[0:]
+Uer_Num2=read_error("Grain3D_DataDriven/Results/U_Num2_error.txt")[0:]
+Uer_Num4=read_error("Grain3D_DataDriven/Results/U_Num4_error.txt")[0:]
+Uer_Num6=read_error("Grain3D_DataDriven/Results/U_Num6_error.txt")[0:]
+Uer_Num8=read_error("Grain3D_DataDriven/Results/U_Num8_error.txt")[0:]
+Ser_Num0=read_error("Grain3D_DataDriven/Results/S_Num0_error.txt")[0:]
+Ser_Num2=read_error("Grain3D_DataDriven/Results/S_Num2_error.txt")[0:]
+Ser_Num4=read_error("Grain3D_DataDriven/Results/S_Num4_error.txt")[0:]
+Ser_Num6=read_error("Grain3D_DataDriven/Results/S_Num6_error.txt")[0:]
+Ser_Num8=read_error("Grain3D_DataDriven/Results/S_Num8_error.txt")[0:]
 
 # 创建图形和轴
 plt.figure(1,figsize=(15, 10))  # 设置图形大小
@@ -51,19 +51,21 @@ plt.figure(1,figsize=(15, 10))  # 设置图形大小
 # 绘制曲线
 plt.plot(steps, Uer_Num0, label='No driving data', color='black', linewidth=2, marker='o', markersize=6, linestyle='-')
 plt.plot(steps, Uer_Num2, label='2 driving data', color='red', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Uer_Num5, label='5 driving data', color='blue', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Uer_Num10, label='10 driving data', color='green', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Uer_Num20, label='20 driving data', color='purple', linewidth=2, marker='o', markersize=6, linestyle='-')
+plt.plot(steps, Uer_Num4, label='4 driving data', color='blue', linewidth=2, marker='o', markersize=6, linestyle='-')
+plt.plot(steps, Uer_Num6, label='6 driving data', color='green', linewidth=2, marker='o', markersize=6, linestyle='-')
+plt.plot(steps, Uer_Num8, label='8 driving data', color='purple', linewidth=2, marker='o', markersize=6, linestyle='-')
 
 # 设置x轴范围
-plt.xlim(10000, 100000)
+plt.xlim(0, 100000)
+plt.xticks(np.arange(0, 100001, 10000))
+plt.yticks(np.arange(0, 1.01, 0.1))
 # 添加标题和标签
 plt.xlabel('Iterations', fontsize=16)
 plt.ylabel('Mean relative error of displacement', fontsize=16)
 # 调整坐标刻度的字体大小
 plt.tick_params(axis='both', which='major', labelsize=14)
 # 添加图例
-plt.legend(fontsize=14, loc='upper left')
+plt.legend(fontsize=14, loc='lower left')
 # 添加网格
 plt.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
 
@@ -73,12 +75,14 @@ plt.figure(2,figsize=(15, 10))  # 设置图形大小
 # 绘制曲线
 plt.plot(steps, Ser_Num0, label='No driving data', color='black', linewidth=2, marker='o', markersize=6, linestyle='-')
 plt.plot(steps, Ser_Num2, label='2 driving data', color='red', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Ser_Num5, label='5 driving data', color='blue', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Ser_Num10, label='10 driving data', color='green', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Ser_Num20, label='20 driving data', color='purple', linewidth=2, marker='o', markersize=6, linestyle='-')
+plt.plot(steps, Ser_Num4, label='4 driving data', color='blue', linewidth=2, marker='o', markersize=6, linestyle='-')
+plt.plot(steps, Ser_Num6, label='6 driving data', color='green', linewidth=2, marker='o', markersize=6, linestyle='-')
+plt.plot(steps, Ser_Num8, label='8 driving data', color='purple', linewidth=2, marker='o', markersize=6, linestyle='-')
 
 # 设置x轴范围
-plt.xlim(10000, 100000)
+plt.xlim(0, 100000)
+plt.xticks(np.arange(0, 100001, 10000))
+plt.yticks(np.arange(0, 1.1, 0.1))
 # 添加标题和标签
 plt.xlabel('Iterations', fontsize=16)
 plt.ylabel('Mean relative error of stress', fontsize=16)
