@@ -33,7 +33,7 @@ depth=4  # ResNet的深度
 #--------------------------------训练参数设置-----------------------------------------
 epoch_num=70000  # 训练的epoch数
 lr=2e-4 #  学习率
-lr_scheduler='Cos'
+lr_scheduler='Exp'
 gamma=0.9999
 T_max=10000
 eta_min=1e-6
