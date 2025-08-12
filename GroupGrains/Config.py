@@ -28,10 +28,10 @@ input_size=3  # ResNet的输入大小
 hidden_size=200  # ResNet的隐藏层大小
 output_size=3  # ResNet的输出大小
 depth=4  # ResNet的深度
-latent_dim=128  # 隐变量的维度
+latent_dim=256  # 隐变量的维度
 #--------------------------------训练参数设置-----------------------------------------
 epoch_num=100000  # 训练的epoch数
-lr=2e-4 #  学习率
+lr=4e-4 #  学习率
 lr_scheduler='Exp'
 gamma=0.9999
 T_max=10000

@@ -111,7 +111,7 @@ def evaluate_model(model, xyz, idx, scaling):
 
 # 从文件加载已经训练完成的模型
 # model=MultiLayerNet(D_in=3, H=30, D_out=3).cuda()
-dem_epoch=20000
+dem_epoch=100000
 model=ResNet(input_size=cfg.input_size, hidden_size=cfg.hidden_size, output_size=cfg.output_size, depth=cfg.depth, data_num=cfg.data_num, latent_dim=cfg.latent_dim).cuda()
 model.load_state_dict(torch.load(f"{cfg.model_save_path}/dem_epoch{dem_epoch}.pth"))
 model.eval()  # 设置模型为evaluation状态
