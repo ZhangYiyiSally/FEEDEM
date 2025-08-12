@@ -1,6 +1,0 @@
-% Model:              15.mph
-% Version:            COMSOL 6.2.0.339
-% Date:               May 30 2025, 13:13
-% Table:              Ser_Num10 - Ser_Num10
-% abs(int89(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int90(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int91(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int92(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int93(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int94(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int95(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int96(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int97(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int98(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int99(X, Y, Z)-solid.misesGp)/abs(solid.misesGp)
-0.9969562321100308                                     0.31128972226551826                                  0.18789048290422913                                  0.15717319193226978                                  0.13678530377553952                                  0.12150399833943076                                  0.11125567060863925                                  0.10438733792390163                                  0.09986010415998545                                  0.09699424662377205                                  0.09522193510897055

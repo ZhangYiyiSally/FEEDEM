@@ -1,0 +1,6 @@
+% Model:              15-2.mph
+% Version:            COMSOL 6.2.0.339
+% Date:               Aug 5 2025, 15:51
+% Table:              Ser_4(线平均值)  - Ser_4(线平均值) 
+% abs(int78(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int79(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int80(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int81(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int82(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int83(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int84(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int85(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int86(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int87(X, Y, Z)-solid.misesGp)/abs(solid.misesGp) abs(int88(X, Y, Z)-solid.misesGp)/abs(solid.misesGp)
+0.9993379487262481                                     0.7768926752242016                                   0.7670712289765419                                   0.7581011710136459                                   0.748483573220449                                    0.7412883285072507                                   0.30030338336856893                                  0.29710690620632735                                  0.30286999156274486                                  0.30536535477101956                                  0.3063014096745944

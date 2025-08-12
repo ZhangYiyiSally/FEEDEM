@@ -1,0 +1,6 @@
+% Model:              15-2.mph
+% Version:            COMSOL 6.2.0.339
+% Date:               Aug 5 2025, 22:41
+% Table:              Uer_4(线平均值) - Uer_4(线平均值)
+% abs(int23(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int24(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int25(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int26(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int27(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int28(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int29(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int30(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int31(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int32(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int33(X, Y, Z)-solid.disp)/abs(solid.disp)
+0.9197774527385094                               0.729574939035884                              0.7275585758290489                             0.7275285230888395                             0.7270883352656413                             0.7298092846969811                             0.08654573592772036                            0.09614301235917973                            0.10160421373822263                            0.10533746531254562                            0.10727848840100349

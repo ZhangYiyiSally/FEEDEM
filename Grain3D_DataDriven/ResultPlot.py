@@ -65,7 +65,7 @@ plt.ylabel('Mean relative error of displacement', fontsize=16)
 # 调整坐标刻度的字体大小
 plt.tick_params(axis='both', which='major', labelsize=14)
 # 添加图例
-plt.legend(fontsize=14, loc='lower left')
+plt.legend(fontsize=14, loc='lower left', framealpha=0.7)  # 设置图例位置和透明度
 # 添加网格
 plt.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
 

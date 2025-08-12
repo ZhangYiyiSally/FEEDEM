@@ -1,6 +1,0 @@
-% Model:              15.mph
-% Version:            COMSOL 6.2.0.339
-% Date:               May 30 2025, 13:10
-% Table:              Uer_Num5 - Uer_Num5
-% abs(int34(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int35(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int36(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int37(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int38(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int39(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int40(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int41(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int42(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int43(X, Y, Z)-solid.disp)/abs(solid.disp) abs(int44(X, Y, Z)-solid.disp)/abs(solid.disp)
-1.5561016075276912                               0.09675171018969596                            0.052605633963558586                           0.03792199166431082                            0.03472595203342081                            0.03315161513145619                            0.03229225424195401                            0.031805411695401326                           0.03149049495725807                            0.03126876308655193                            0.03112287930618369
