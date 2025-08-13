@@ -69,29 +69,29 @@ plt.legend(fontsize=14, loc='lower left', framealpha=0.7)  # 设置图例位置�
 # 添加网格
 plt.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
 
-# 创建图形和轴
-plt.figure(2,figsize=(15, 10))  # 设置图形大小
+# # 创建图形和轴
+# plt.figure(2,figsize=(15, 10))  # 设置图形大小
 
-# 绘制曲线
-plt.plot(steps, Ser_Num0, label='No driving data', color='black', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Ser_Num2, label='2 driving data', color='red', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Ser_Num4, label='4 driving data', color='blue', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Ser_Num6, label='6 driving data', color='green', linewidth=2, marker='o', markersize=6, linestyle='-')
-plt.plot(steps, Ser_Num8, label='8 driving data', color='purple', linewidth=2, marker='o', markersize=6, linestyle='-')
+# # 绘制曲线
+# plt.plot(steps, Ser_Num0, label='No driving data', color='black', linewidth=2, marker='o', markersize=6, linestyle='-')
+# plt.plot(steps, Ser_Num2, label='2 driving data', color='red', linewidth=2, marker='o', markersize=6, linestyle='-')
+# plt.plot(steps, Ser_Num4, label='4 driving data', color='blue', linewidth=2, marker='o', markersize=6, linestyle='-')
+# plt.plot(steps, Ser_Num6, label='6 driving data', color='green', linewidth=2, marker='o', markersize=6, linestyle='-')
+# plt.plot(steps, Ser_Num8, label='8 driving data', color='purple', linewidth=2, marker='o', markersize=6, linestyle='-')
 
-# 设置x轴范围
-plt.xlim(0, 100000)
-plt.xticks(np.arange(0, 100001, 10000))
-plt.yticks(np.arange(0, 1.1, 0.1))
-# 添加标题和标签
-plt.xlabel('Iterations', fontsize=16)
-plt.ylabel('Mean relative error of stress', fontsize=16)
-# 调整坐标刻度的字体大小
-plt.tick_params(axis='both', which='major', labelsize=14)
-# 添加图例
-plt.legend(fontsize=14, loc='upper left')
-# 添加网格
-plt.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
+# # 设置x轴范围
+# plt.xlim(0, 100000)
+# plt.xticks(np.arange(0, 100001, 10000))
+# plt.yticks(np.arange(0, 1.1, 0.1))
+# # 添加标题和标签
+# plt.xlabel('Iterations', fontsize=16)
+# plt.ylabel('Mean relative error of stress', fontsize=16)
+# # 调整坐标刻度的字体大小
+# plt.tick_params(axis='both', which='major', labelsize=14)
+# # 添加图例
+# plt.legend(fontsize=14, loc='upper left')
+# # 添加网格
+# plt.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
 
 # 显示图形
 plt.show()
