@@ -1,4 +1,4 @@
-# FEDEM - Finite Element-enhanced Deep Energy Method
+# FEEDEM - Finite Element-Enhanced Deep Energy Method
 
 FEDEM is a deep learning-based finite element mechanics computation framework for simulating and analyzing hyperelastic problems in solid propellants. This project combines traditional finite element methods with modern deep learning techniques to provide efficient numerical solutions for complex-geometry grains.
 ![Group Grain Results 1](./images/GroupGrainResults-1.png)
