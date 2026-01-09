@@ -35,7 +35,7 @@ plt.figure(figsize=(10, 6))  # 设置图形大小
 # plt.plot(steps, FEMPINN_eL2_3, label='Seed 3', color='green', linewidth=1.5, alpha=0.5)
 
 # 绘制平均值曲线
-plt.plot(steps, mean_FEMPINN_eL2, label='FEDEM mean error', color='black', linewidth=2)
+plt.plot(steps, mean_FEMPINN_eL2, label='AD-FEDEM mean error', color='black', linewidth=2)
 plt.plot(steps, mean_PINN_eL2, label='DEM mean error', color='red', linewidth=2)
 
 # 绘制置信区间
